@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marcador de Tempo e Placar de Basquete</title>
+    <style>
+        /* Estilo Básico */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #1c1c1c; /* Preto */
+            color: #dcdcdc; /* Chumbo */
+            margin: 0;
+            text-align: center;
+            flex-direction: column;
+        }
+
+        #app {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* Estilo da Logo */
+        #logo {
+            margin: 20px 0;
+        }
+
+        #logo img {
+            max-width: 70px; /* Reduzido para 70px */
+        }
+
+        /* Placar de Basketball */
+        .scoreboard {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .team-box {
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .blue-box {
+            background-color: blue;
+        }
+
+        .white-box {
+            background-color: white;
+            color: black;
+        }
+
+        .team-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        button {
+            padding: 10px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            background-color: #505050; /* Cor de chumbo */
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #707070;
+        }
+
+        #game-timer, #shot-clock {
+            font-size: 3rem;
+            background-color: #333; /* Fundo chumbo */
+            padding: 20px;
+            border-radius: 10px;
+            width: 300px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Controles */
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .adjust-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .adjust-buttons button {
+            padding: 5px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 40px;
+            background-color: #555; /* Botão chumbo escuro */
+            color: #ffffff;
+        }
+
+        .adjust-buttons button:hover {
+            background-color: #666;
+        }
+
+        .shot-clock-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .shot-clock-buttons button {
+            padding: 5px;
+            font-size: 0.9rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #555; /* Botão chumbo escuro */
+            color: #ffffff;
+        }
+
+        .shot-clock-buttons button:hover {
+            background-color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Placar de Basketball -->
+        <div class="scoreboard">
+            <div class="team-box blue-box" id="blue-score" onclick="adjustScore('blue', -1, false)">0</div>
+            <div id="logo">
+                <img src="spt.png" alt="Logo">
+            </div>
+            <div class="team-box white-box" id="white-score" onclick="adjustScore('white', -1, false)">0</div>
+        </div>
+        <div class="team-controls">
+            <div id="blue-controls">
+                <button onclick="adjustScore('blue', 1, true)">+1</button>
+                <button onclick="adjustScore('blue', 2, true)">+2</button>
+                <button onclick="adjustScore('blue', 3, true)">+3</button>
+            </div>
+            <div id="white-controls">
+                <button onclick="adjustScore('white', 1, true)">+1</button>
+                <button onclick="adjustScore('white', 2, true)">+2</button>
+                <button onclick="adjustScore('white', 3, true)">+3</button>
+            </div>
+        </div>
+
+        <!-- Timer do Jogo com botões de ajuste -->
+        <div id="game-timer">
+            <button class="adjust-buttons" id="game-time-decrease">-</button>
+            <span id="game-time-display">12:00</span>
+            <button class="adjust-buttons" id="game-time-increase">+</button>
+        </div>
+        <div class="controls">
+            <button id="start-pause-game">Iniciar Jogo</button>
+            <button id="reset-game">Reset Geral</button>
+        </div>
+
+        <!-- Timer de 24 e 14 Segundos com botões de ajuste -->
+        <div id="shot-clock">
+            <button class="adjust-buttons" id="shot-clock-decrease">-</button>
+            <span id="shot-clock-display">24</span>
+            <button class="adjust-buttons" id="shot-clock-increase">+</button>
+        </div>
+        <div class="shot-clock-buttons">
+            <button id="reset-24">Resetar para 24s</button>
+            <button id="reset-14">Resetar para 14s</button>
+        </div>
+
+        <!-- Botão de Pedido de Tempo -->
+        <button class="time-request-button" id="time-request">Pedido de Tempo</button>
+
+        <!-- Novos botões de função F1-F5 -->
+        <div class="function-buttons">
+            <button id="f1-button">F1</button>
+            <button id="f2-button">F2</button>
+            <button id="f3-button">F3</button>
+            <button id="f4-button">F4</button>
+            <button id="f5-button">F5</button>
+        </div>
+
+        <!-- Botão de Tela Cheia -->
+        <button id="fullscreen-button">Tela Cheia</button>
+    </div>
+
+    <!-- Sons para diferentes eventos -->
+    <audio id="sound-10-seconds" src="10.mp3" preload="auto"></audio>
+    <audio id="sound-5-seconds" src="5.mp3" preload="auto"></audio>
+    <audio id="sound-time-up" src="estouro.mp3" preload="auto"></audio>
+    <audio id="sound-game-over" src="final.mp3" preload="auto"></audio>
+    <audio id="sound-time-request" src="tempo.mp3" preload="auto"></audio>
+    <audio id="sound-3-seconds" src="3.mp3" preload="auto"></audio>
+    <audio id="sound-2-seconds" src="2.mp3" preload="auto"></audio>
+    <audio id="sound-1-seconds" src="1.mp3" preload="auto"></audio>
+    <audio id="sound-f1" src="f1.mp3" preload="auto"></audio>
+    <audio id="sound-f2" src="f2.mp3" preload="auto"></audio>
+    <audio id="sound-f3" src="f3.mp3" preload="auto"></audio>
+    <audio id="sound-f4" src="f4.mp3" preload="auto"></audio>
+    <audio id="sound-f5" src="f5.mp3" preload="auto"></audio>
+
+    <script>
+        const maxScore = 21;
+
+        function playAudio(fileName) {
+            const audio = new Audio(fileName);
+            audio.play();
+            return new Promise((resolve) => {
+                audio.onended = resolve;
+            });
+        }
+
+        async function adjustScore(team, delta, playSound) {
+            const scoreElement = document.getElementById(`${team}-score`);
+            let currentScore = parseInt(scoreElement.textContent);
+            let newScore = currentScore + delta;
+
+            if (newScore >= 0 && newScore <= maxScore) {
+                scoreElement.textContent = newScore;
+
+                if (playSound && newScore < maxScore) {
+                    const blueScore = parseInt(document.getElementById('blue-score').textContent);
+                    const whiteScore = parseInt(document.getElementById('white-score').textContent);
+
+                    // Sempre reproduz o som de ambos os placares
+                    if (blueScore > 0) {
+                        await playAudio(`a${blueScore}.mp3`);
+                    }
+                    if (whiteScore > 0) {
+                        await playAudio(`b${whiteScore}.mp3`);
+                    }
+                }
+            }
+
+            // Emitir som ao atingir ou ultrapassar 21 pontos
+            if (newScore >= maxScore && delta > 0) {
+                await playAudio('fj.mp3');
+            }
+        }
+
+        // Variáveis Globais
+        let gameTimerInterval;
+        let shotClockInterval;
+        let gameTime = 12 * 60; // 12 minutos em segundos
+        let shotClockTime = 24;
+        let isGameRunning = false;
+        let isShotClockRunning = false;
+        let isFullscreen = false;
+
+        // Elementos HTML
+        const gameTimeDisplay = document.getElementById('game-time-display');
+        const shotClockDisplay = document.getElementById('shot-clock-display');
+        const sound10Seconds = document.getElementById('sound-10-seconds');
+        const sound5Seconds = document.getElementById('sound-5-seconds');
+        const soundTimeUp = document.getElementById('sound-time-up');
+        const soundGameOver = document.getElementById('sound-game-over');
+        const soundTimeRequest = document.getElementById('sound-time-request');
+        const sound3Seconds = document.getElementById('sound-3-seconds');
+        const sound2Seconds = document.getElementById('sound-2-seconds');
+        const sound1Seconds = document.getElementById('sound-1-seconds');
+        const startPauseGameButton = document.getElementById('start-pause-game');
+        const timeRequestButton = document.getElementById('time-request');
+        const fullscreenButton = document.getElementById('fullscreen-button');
+
+        // Captura os novos elementos de áudio
+        const soundF1 = document.getElementById('sound-f1');
+        const soundF2 = document.getElementById('sound-f2');
+        const soundF3 = document.getElementById('sound-f3');
+        const soundF4 = document.getElementById('sound-f4');
+        const soundF5 = document.getElementById('sound-f5');
+
+        // Função para formatar o tempo em minutos e segundos
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        // Atualiza a exibição do cronômetro do jogo
+        function updateGameTimer() {
+            gameTimeDisplay.textContent = formatTime(gameTime);
+        }
+
+        // Atualiza a exibição do cronômetro do shot clock
+        function updateShotClock() {
+            shotClockDisplay.textContent = shotClockTime;
+        }
+
+        // Inicia o cronômetro do jogo
+        function startGameTimer() {
+            if (isGameRunning) return;
+            isGameRunning = true;
+            startPauseGameButton.textContent = "Pausar Jogo";
+            gameTimerInterval = setInterval(() => {
+                gameTime--;
+                updateGameTimer();
+
+                // Para o cronômetro quando o tempo acaba
+                if (gameTime <= 0) {
+                    clearInterval(gameTimerInterval);
+                    clearInterval(shotClockInterval);
+                    isGameRunning = false;
+                    isShotClockRunning = false;
+                    soundGameOver.play();
+                    soundTimeUp.play(); // Toca o som "estouro.mp3" aqui
+                }
+            }, 1000);
+        }
+
+        // Inicia ou continua o shot clock
+        function startShotClock(reset = false) {
+            if (isShotClockRunning && !reset) return;
+            isShotClockRunning = true;
+            shotClockInterval = setInterval(() => {
+                shotClockTime--;
+                updateShotClock();
+
+                // Sons de aviso
+                if (shotClockTime === 10) sound10Seconds.play();
+                if (shotClockTime === 5) sound5Seconds.play();
+                if (shotClockTime === 3) sound3Seconds.play();
+                if (shotClockTime === 2) sound2Seconds.play();
+                if (shotClockTime === 1) sound1Seconds.play();
+                if (shotClockTime <= 0) {
+                    // Reseta para 24 e continua a contagem
+                    shotClockTime = 24;
+                    updateShotClock();
+                    soundTimeUp.play();
+                }
+            }, 1000);
+        }
+
+        // Alterna a execução do cronômetro do jogo
+        function toggleGameTimer() {
+            if (isGameRunning) {
+                clearInterval(gameTimerInterval);
+                clearInterval(shotClockInterval);
+                isGameRunning = false;
+                isShotClockRunning = false;
+                startPauseGameButton.textContent = "Iniciar Jogo";
+            } else {
+                startGameTimer();
+                startShotClock();
+            }
+        }
+
+        // Reseta o cronômetro do jogo e do shot clock
+        function resetGameTimer() {
+            clearInterval(gameTimerInterval);
+            clearInterval(shotClockInterval);
+            gameTime = 12 * 60;
+            shotClockTime = 24;
+            updateGameTimer();
+            updateShotClock();
+            isGameRunning = false;
+            isShotClockRunning = false;
+            startPauseGameButton.textContent = "Iniciar Jogo";
+        }
+
+        // Reseta o shot clock para 24 segundos e continua a contagem
+        function resetShotClockTo24() {
+            clearInterval(shotClockInterval);
+            shotClockTime = 24;
+            updateShotClock();
+            startShotClock(true);
+        }
+
+        // Reseta o shot clock para 14 segundos e continua a contagem
+        function resetShotClockTo14() {
+            clearInterval(shotClockInterval);
+            shotClockTime = 14;
+            updateShotClock();
+            startShotClock(true);
+        }
+
+        // Reseta o placar e o tempo geral
+        function resetAll() {
+            resetGameTimer();
+            document.getElementById('blue-score').textContent = "0";
+            document.getElementById('white-score').textContent = "0";
+        }
+
+        // Controle de som para o pedido de tempo
+        timeRequestButton.addEventListener('click', () => {
+            soundTimeRequest.play();
+        });
+
+        // Controle dos botões de ajuste de tempo do jogo
+        document.getElementById('game-time-increase').addEventListener('click', () => {
+            gameTime += 10;
+            updateGameTimer();
+        });
+
+        document.getElementById('game-time-decrease').addEventListener('click', () => {
+            gameTime = Math.max(0, gameTime - 10);
+            updateGameTimer();
+        });
+
+        // Controle dos botões de ajuste do shot clock
+        document.getElementById('shot-clock-increase').addEventListener('click', () => {
+            shotClockTime = Math.min(99, shotClockTime + 1);
+            updateShotClock();
+        });
+
+        document.getElementById('shot-clock-decrease').addEventListener('click', () => {
+            shotClockTime = Math.max(0, shotClockTime - 1);
+            updateShotClock();
+        });
+
+        // Controle dos botões de reset
+        document.getElementById('reset-24').addEventListener('click', resetShotClockTo24);
+        document.getElementById('reset-14').addEventListener('click', resetShotClockTo14);
+
+        // Controle do botão de reset geral
+        document.getElementById('reset-game').addEventListener('click', resetAll);
+
+        // Controle do botão de fullscreen
+        fullscreenButton.addEventListener('click', () => {
+            if (!isFullscreen) {
+                document.documentElement.requestFullscreen();
+                fullscreenButton.textContent = "Sair da Tela Cheia";
+                isFullscreen = true;
+            } else {
+                document.exitFullscreen();
+                fullscreenButton.textContent = "Tela Cheia";
+                isFullscreen = false;
+            }
+        });
+
+        // Adiciona event listeners para os novos botões de função
+        document.getElementById('f1-button').addEventListener('click', () => {
+            soundF1.play();
+        });
+
+        document.getElementById('f2-button').addEventListener('click', () => {
+            soundF2.play();
+        });
+
+        document.getElementById('f3-button').addEventListener('click', () => {
+            soundF3.play();
+        });
+
+        document.getElementById('f4-button').addEventListener('click', () => {
+            soundF4.play();
+        });
+
+        document.getElementById('f5-button').addEventListener('click', () => {
+            soundF5.play();
+        });
+
+        // Inicializa o cronômetro do jogo e do shot clock
+        updateGameTimer();
+        updateShotClock();
+
+        // Adiciona o evento de clique ao botão de iniciar jogo
+        startPauseGameButton.addEventListener('click', toggleGameTimer);
+    </script>
+</body>
+</html>
