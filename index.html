@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marcador de Tempo e Placar de Basquete</title>
+    <title>sparta-pe</title>
+    <link rel="manifest" href="manifest.json">
     <style>
         /* Estilo Básico */
         body {
@@ -65,12 +66,12 @@
             color: black;
         }
 
-        .team-controls {
+	.team-controls {
             display: flex;
             justify-content: center;
             gap: 10px;
             margin-top: 10px;
-        }
+	}
 
         button {
             padding: 10px 15px;
@@ -96,51 +97,6 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-        }
-
-        /* Controles */
-        .controls {
-            display: flex;
-            gap: 10px;
-        }
-
-        .adjust-buttons {
-            display: flex;
-            gap: 10px;
-        }
-
-        .adjust-buttons button {
-            padding: 5px;
-            font-size: 1.2rem;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            width: 40px;
-            background-color: #555; /* Botão chumbo escuro */
-            color: #ffffff;
-        }
-
-        .adjust-buttons button:hover {
-            background-color: #666;
-        }
-
-        .shot-clock-buttons {
-            display: flex;
-            gap: 10px;
-        }
-
-        .shot-clock-buttons button {
-            padding: 5px;
-            font-size: 0.9rem;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            background-color: #555; /* Botão chumbo escuro */
-            color: #ffffff;
-        }
-
-        .shot-clock-buttons button:hover {
-            background-color: #666;
         }
     </style>
 </head>
@@ -185,12 +141,12 @@
             <button class="adjust-buttons" id="shot-clock-increase">+</button>
         </div>
         <div class="shot-clock-buttons">
-            <button id="reset-24">Resetar para 24s</button>
-            <button id="reset-14">Resetar para 14s</button>
+            <button id="reset-24">24s</button>
+            <button id="reset-14">14s</button>
         </div>
 
         <!-- Botão de Pedido de Tempo -->
-        <button class="time-request-button" id="time-request">Pedido de Tempo</button>
+        <button class="time-request-button" id="time-request">Tempo</button>
 
         <!-- Novos botões de função F1-F5 -->
         <div class="function-buttons">
@@ -475,6 +431,43 @@
 
         // Adiciona o evento de clique ao botão de iniciar jogo
         startPauseGameButton.addEventListener('click', toggleGameTimer);
+
+        // Sugestão de instalação do aplicativo
+        let deferredPrompt;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installButton = document.createElement('button');
+            installButton.innerText = 'Instalar App';
+            document.body.appendChild(installButton);
+
+            installButton.addEventListener('click', () => {
+                installButton.style.display = 'none';
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('Usuário aceitou a instalação do app');
+                    } else {
+                        console.log('Usuário rejeitou a instalação do app');
+                    }
+                    deferredPrompt = null;
+                });
+            });
+        });
+
+        // Registrar o Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker registrado com sucesso:', registration);
+                    })
+                    .catch(error => {
+                        console.log('Falha ao registrar o Service Worker:', error);
+                    });
+            });
+        }
     </script>
 </body>
 </html>
