@@ -104,22 +104,22 @@
   <div id="app">
       <!-- Placar de Basketball -->
       <div class="scoreboard">
-          <div class="team-box blue-box" id="blue-score" onclick="adjustScore('blue', -1, false)">0</div>
+          <div class="team-box white-box" id="white-score" onclick="adjustScore('white', -1, false)">0</div>
           <div id="logo">
               <img src="spt.png" alt="Logo">
           </div>
-          <div class="team-box white-box" id="white-score" onclick="adjustScore('white', -1, false)">0</div>
+          <div class="team-box blue-box" id="blue-score" onclick="adjustScore('blue', -1, false)">0</div>
       </div>
       <div class="team-controls">
-          <div id="blue-controls">
-              <button onclick="adjustScore('blue', 1, true)">+1</button>
-              <button onclick="adjustScore('blue', 2, true)">+2</button>
-              <button onclick="adjustScore('blue', 3, true)">+3</button>
-          </div>
           <div id="white-controls">
               <button onclick="adjustScore('white', 1, true)">+1</button>
               <button onclick="adjustScore('white', 2, true)">+2</button>
               <button onclick="adjustScore('white', 3, true)">+3</button>
+          </div>
+          <div id="blue-controls">
+              <button onclick="adjustScore('blue', 1, true)">+1</button>
+              <button onclick="adjustScore('blue', 2, true)">+2</button>
+              <button onclick="adjustScore('blue', 3, true)">+3</button>
           </div>
       </div>
 
@@ -196,15 +196,16 @@
               scoreElement.textContent = newScore;
 
               if (playSound && newScore < maxScore) {
-                  const blueScore = parseInt(document.getElementById('blue-score').textContent);
                   const whiteScore = parseInt(document.getElementById('white-score').textContent);
+                  const blueScore = parseInt(document.getElementById('blue-score').textContent);
 
-                  // Sempre reproduz o som de ambos os placares
-                  if (blueScore > 0) {
-                      await playAudio(`a${blueScore}.mp3`);
-                  }
+                  // Reproduz o som do placar da equipe branca primeiro
                   if (whiteScore > 0) {
                       await playAudio(`b${whiteScore}.mp3`);
+                  }
+                  // Depois reproduz o som do placar da equipe azul
+                  if (blueScore > 0) {
+                      await playAudio(`a${blueScore}.mp3`);
                   }
               }
           }
