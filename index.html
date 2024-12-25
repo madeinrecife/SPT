@@ -21,14 +21,10 @@
       }
 
       #app {
-          display: none; /* Oculto até que tudo esteja carregado */
+          display: flex;
           flex-direction: column;
           align-items: center;
           gap: 20px;
-      }
-
-      #loader {
-          font-size: 2rem;
       }
 
       /* Estilo da Logo */
@@ -105,26 +101,25 @@
   </style>
 </head>
 <body>
-  <div id="loader">Carregando...</div>
   <div id="app">
       <!-- Placar de Basketball -->
       <div class="scoreboard">
-          <div class="team-box white-box" id="white-score" onclick="adjustScore('white', -1, false)">0</div>
+          <div class="team-box blue-box" id="blue-score" onclick="adjustScore('blue', -1, false)">0</div>
           <div id="logo">
               <img src="spt.png" alt="Logo">
           </div>
-          <div class="team-box blue-box" id="blue-score" onclick="adjustScore('blue', -1, false)">0</div>
+          <div class="team-box white-box" id="white-score" onclick="adjustScore('white', -1, false)">0</div>
       </div>
       <div class="team-controls">
-          <div id="white-controls">
-              <button onclick="adjustScore('white', 1, true)">+1</button>
-              <button onclick="adjustScore('white', 2, true)">+2</button>
-              <button onclick="adjustScore('white', 3, true)">+3</button>
-          </div>
           <div id="blue-controls">
               <button onclick="adjustScore('blue', 1, true)">+1</button>
               <button onclick="adjustScore('blue', 2, true)">+2</button>
               <button onclick="adjustScore('blue', 3, true)">+3</button>
+          </div>
+          <div id="white-controls">
+              <button onclick="adjustScore('white', 1, true)">+1</button>
+              <button onclick="adjustScore('white', 2, true)">+2</button>
+              <button onclick="adjustScore('white', 3, true)">+3</button>
           </div>
       </div>
 
@@ -184,58 +179,12 @@
   <script>
       const maxScore = 21;
 
-      // Função para carregar todos os arquivos
-      function preloadAssets(assets) {
-          return Promise.all(assets.map(asset => {
-              return fetch(asset)
-                  .then(response => {
-                      if (!response.ok) throw new Error('Network response was not ok');
-                      return response.blob();
-                  });
-          }));
-      }
-
-      // Lista de arquivos a serem carregados
-      const assetsToLoad = [
-          'spt.png',
-          '10.mp3',
-          '5.mp3',
-          'estouro.mp3',
-          'final.mp3',
-          'tempo.mp3',
-          '3.mp3',
-          '2.mp3',
-          '1.mp3',
-          'f1.mp3',
-          'f2.mp3',
-          'f3.mp3',
-          'f4.mp3',
-          'f5.mp3',
-          'manifest.json'
-      ];
-
-      async function initApp() {
-          try {
-              await preloadAssets(assetsToLoad);
-              document.getElementById('loader').style.display = 'none';
-              document.getElementById('app').style.display = 'flex';
-              loadStoredData();
-          } catch (error) {
-              console.error('Falha ao carregar recursos:', error);
-          }
-      }
-
-      // Função para carregar dados armazenados
-      function loadStoredData() {
-          const whiteScore = localStorage.getItem('whiteScore') || 0;
-          const blueScore = localStorage.getItem('blueScore') || 0;
-          document.getElementById('white-score').textContent = whiteScore;
-          document.getElementById('blue-score').textContent = blueScore;
-      }
-
-      // Função para armazenar dados
-      function storeScore(team, score) {
-          localStorage.setItem(`${team}Score`, score);
+      function playAudio(fileName) {
+          const audio = new Audio(fileName);
+          audio.play();
+          return new Promise((resolve) => {
+              audio.onended = resolve;
+          });
       }
 
       async function adjustScore(team, delta, playSound) {
@@ -245,19 +194,17 @@
 
           if (newScore >= 0 && newScore <= maxScore) {
               scoreElement.textContent = newScore;
-              storeScore(team, newScore); // Armazena o novo score
 
               if (playSound && newScore < maxScore) {
-                  const whiteScore = parseInt(document.getElementById('white-score').textContent);
                   const blueScore = parseInt(document.getElementById('blue-score').textContent);
+                  const whiteScore = parseInt(document.getElementById('white-score').textContent);
 
-                  // Reproduz o som do placar da equipe branca primeiro
-                  if (whiteScore > 0) {
-                      await playAudio(`b${whiteScore}.mp3`);
-                  }
-                  // Depois reproduz o som do placar da equipe azul
+                  // Sempre reproduz o som de ambos os placares
                   if (blueScore > 0) {
                       await playAudio(`a${blueScore}.mp3`);
+                  }
+                  if (whiteScore > 0) {
+                      await playAudio(`b${whiteScore}.mp3`);
                   }
               }
           }
@@ -266,14 +213,6 @@
           if (newScore >= maxScore && delta > 0) {
               await playAudio('fj.mp3');
           }
-      }
-
-      function playAudio(fileName) {
-          const audio = new Audio(fileName);
-          audio.play();
-          return new Promise((resolve) => {
-              audio.onended = resolve;
-          });
       }
 
       // Variáveis Globais
@@ -288,9 +227,24 @@
       // Elementos HTML
       const gameTimeDisplay = document.getElementById('game-time-display');
       const shotClockDisplay = document.getElementById('shot-clock-display');
+      const sound10Seconds = document.getElementById('sound-10-seconds');
+      const sound5Seconds = document.getElementById('sound-5-seconds');
+      const soundTimeUp = document.getElementById('sound-time-up');
+      const soundGameOver = document.getElementById('sound-game-over');
+      const soundTimeRequest = document.getElementById('sound-time-request');
+      const sound3Seconds = document.getElementById('sound-3-seconds');
+      const sound2Seconds = document.getElementById('sound-2-seconds');
+      const sound1Seconds = document.getElementById('sound-1-seconds');
       const startPauseGameButton = document.getElementById('start-pause-game');
       const timeRequestButton = document.getElementById('time-request');
       const fullscreenButton = document.getElementById('fullscreen-button');
+
+      // Captura os novos elementos de áudio
+      const soundF1 = document.getElementById('sound-f1');
+      const soundF2 = document.getElementById('sound-f2');
+      const soundF3 = document.getElementById('sound-f3');
+      const soundF4 = document.getElementById('sound-f4');
+      const soundF5 = document.getElementById('sound-f5');
 
       // Função para formatar o tempo em minutos e segundos
       function formatTime(seconds) {
@@ -324,7 +278,8 @@
                   clearInterval(shotClockInterval);
                   isGameRunning = false;
                   isShotClockRunning = false;
-                  playAudio('final.mp3'); // Toca o som de "game over"
+                  soundGameOver.play();
+                  soundTimeUp.play(); // Toca o som "estouro.mp3" aqui
               }
           }, 1000);
       }
@@ -338,13 +293,16 @@
               updateShotClock();
 
               // Sons de aviso
-              if (shotClockTime === 10) playAudio('10.mp3');
-              if (shotClockTime === 5) playAudio('5.mp3');
+              if (shotClockTime === 10) sound10Seconds.play();
+              if (shotClockTime === 5) sound5Seconds.play();
+              if (shotClockTime === 3) sound3Seconds.play();
+              if (shotClockTime === 2) sound2Seconds.play();
+              if (shotClockTime === 1) sound1Seconds.play();
               if (shotClockTime <= 0) {
                   // Reseta para 24 e continua a contagem
                   shotClockTime = 24;
                   updateShotClock();
-                  playAudio('estouro.mp3');
+                  soundTimeUp.play();
               }
           }, 1000);
       }
@@ -397,13 +355,11 @@
           resetGameTimer();
           document.getElementById('blue-score').textContent = "0";
           document.getElementById('white-score').textContent = "0";
-          localStorage.removeItem('whiteScore');
-          localStorage.removeItem('blueScore');
       }
 
       // Controle de som para o pedido de tempo
       timeRequestButton.addEventListener('click', () => {
-          playAudio('tempo.mp3');
+          soundTimeRequest.play();
       });
 
       // Controle dos botões de ajuste de tempo do jogo
@@ -450,23 +406,23 @@
 
       // Adiciona event listeners para os novos botões de função
       document.getElementById('f1-button').addEventListener('click', () => {
-          playAudio('f1.mp3');
+          soundF1.play();
       });
 
       document.getElementById('f2-button').addEventListener('click', () => {
-          playAudio('f2.mp3');
+          soundF2.play();
       });
 
       document.getElementById('f3-button').addEventListener('click', () => {
-          playAudio('f3.mp3');
+          soundF3.play();
       });
 
       document.getElementById('f4-button').addEventListener('click', () => {
-          playAudio('f4.mp3');
+          soundF4.play();
       });
 
       document.getElementById('f5-button').addEventListener('click', () => {
-          playAudio('f5.mp3');
+          soundF5.play();
       });
 
       // Inicializa o cronômetro do jogo e do shot clock
@@ -490,8 +446,7 @@
               installButton.style.display = 'none';
               deferredPrompt.prompt();
               deferredPrompt.userChoice.then((choiceResult) => {
-                  if (choiceResult.outcome ===
-                  'accepted') {
+                  if (choiceResult.outcome === 'accepted') {
                       console.log('Usuário aceitou a instalação do app');
                   } else {
                       console.log('Usuário rejeitou a instalação do app');
@@ -513,9 +468,6 @@
                   });
           });
       }
-
-      // Inicializa o aplicativo
-      initApp();
   </script>
 </body>
 </html>
