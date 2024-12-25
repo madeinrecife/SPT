@@ -21,14 +21,10 @@
       }
 
       #app {
-          display: none; /* Oculto até que tudo esteja carregado */
+          display: flex;
           flex-direction: column;
           align-items: center;
           gap: 20px;
-      }
-
-      #loader {
-          font-size: 2rem;
       }
 
       /* Estilo da Logo */
@@ -70,13 +66,6 @@
           color: black;
       }
 
-      .team-controls {
-          display: flex;
-          justify-content: center;
-          gap: 10px;
-          margin-top: 10px;
-      }
-
       button {
           padding: 10px 15px;
           font-size: 14px;
@@ -102,10 +91,17 @@
           align-items: center;
           box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
       }
+      
+      /* Estilo do iframe */
+      #score-control {
+          width: 100%;
+          max-width: 400px;
+          height: 300px;
+          border: none;
+      }
   </style>
 </head>
 <body>
-  <div id="loader">Carregando...</div>
   <div id="app">
       <!-- Placar de Basketball -->
       <div class="scoreboard">
@@ -115,18 +111,9 @@
           </div>
           <div class="team-box blue-box" id="blue-score" onclick="adjustScore('blue', -1, false)">0</div>
       </div>
-      <div class="team-controls">
-          <div id="white-controls">
-              <button onclick="adjustScore('white', 1, true)">+1</button>
-              <button onclick="adjustScore('white', 2, true)">+2</button>
-              <button onclick="adjustScore('white', 3, true)">+3</button>
-          </div>
-          <div id="blue-controls">
-              <button onclick="adjustScore('blue', 1, true)">+1</button>
-              <button onclick="adjustScore('blue', 2, true)">+2</button>
-              <button onclick="adjustScore('blue', 3, true)">+3</button>
-          </div>
-      </div>
+
+      <!-- Iframe para controle do placar -->
+      <iframe id="score-control" src="control.html"></iframe>
 
       <!-- Timer do Jogo com botões de ajuste -->
       <div id="game-timer">
@@ -153,15 +140,6 @@
       <!-- Botão de Pedido de Tempo -->
       <button class="time-request-button" id="time-request">Tempo</button>
 
-      <!-- Novos botões de função F1-F5 -->
-      <div class="function-buttons">
-          <button id="f1-button">F1</button>
-          <button id="f2-button">F2</button>
-          <button id="f3-button">F3</button>
-          <button id="f4-button">F4</button>
-          <button id="f5-button">F5</button>
-      </div>
-
       <!-- Botão de Tela Cheia -->
       <button id="fullscreen-button">Tela Cheia</button>
   </div>
@@ -175,67 +153,16 @@
   <audio id="sound-3-seconds" src="3.mp3" preload="auto"></audio>
   <audio id="sound-2-seconds" src="2.mp3" preload="auto"></audio>
   <audio id="sound-1-seconds" src="1.mp3" preload="auto"></audio>
-  <audio id="sound-f1" src="f1.mp3" preload="auto"></audio>
-  <audio id="sound-f2" src="f2.mp3" preload="auto"></audio>
-  <audio id="sound-f3" src="f3.mp3" preload="auto"></audio>
-  <audio id="sound-f4" src="f4.mp3" preload="auto"></audio>
-  <audio id="sound-f5" src="f5.mp3" preload="auto"></audio>
 
   <script>
       const maxScore = 21;
 
-      // Função para carregar todos os arquivos
-      function preloadAssets(assets) {
-          return Promise.all(assets.map(asset => {
-              return fetch(asset)
-                  .then(response => {
-                      if (!response.ok) throw new Error('Network response was not ok');
-                      return response.blob();
-                  });
-          }));
-      }
-
-      // Lista de arquivos a serem carregados
-      const assetsToLoad = [
-          'spt.png',
-          '10.mp3',
-          '5.mp3',
-          'estouro.mp3',
-          'final.mp3',
-          'tempo.mp3',
-          '3.mp3',
-          '2.mp3',
-          '1.mp3',
-          'f1.mp3',
-          'f2.mp3',
-          'f3.mp3',
-          'f4.mp3',
-          'f5.mp3',
-          'manifest.json'
-      ];
-
-      async function initApp() {
-          try {
-              await preloadAssets(assetsToLoad);
-              document.getElementById('loader').style.display = 'none';
-              document.getElementById('app').style.display = 'flex';
-              loadStoredData();
-          } catch (error) {
-              console.error('Falha ao carregar recursos:', error);
-          }
-      }
-
-      // Função para carregar dados armazenados
-      function loadStoredData() {
-          const whiteScore = localStorage.getItem('whiteScore') || 0;
-          const blueScore = localStorage.getItem('blueScore') || 0;
-          document.getElementById('white-score').textContent = whiteScore;
-          document.getElementById('blue-score').textContent = blueScore;
-      }
-
-      // Função para armazenar dados
-      function storeScore(team, score) {
-          localStorage.setItem(`${team}Score`, score);
+      function playAudio(fileName) {
+          const audio = new Audio(fileName);
+          audio.play();
+          return new Promise((resolve) => {
+              audio.onended = resolve;
+          });
       }
 
       async function adjustScore(team, delta, playSound) {
@@ -245,7 +172,6 @@
 
           if (newScore >= 0 && newScore <= maxScore) {
               scoreElement.textContent = newScore;
-              storeScore(team, newScore); // Armazena o novo score
 
               if (playSound && newScore < maxScore) {
                   const whiteScore = parseInt(document.getElementById('white-score').textContent);
@@ -268,14 +194,6 @@
           }
       }
 
-      function playAudio(fileName) {
-          const audio = new Audio(fileName);
-          audio.play();
-          return new Promise((resolve) => {
-              audio.onended = resolve;
-          });
-      }
-
       // Variáveis Globais
       let gameTimerInterval;
       let shotClockInterval;
@@ -283,7 +201,6 @@
       let shotClockTime = 24;
       let isGameRunning = false;
       let isShotClockRunning = false;
-      let isFullscreen = false;
 
       // Elementos HTML
       const gameTimeDisplay = document.getElementById('game-time-display');
@@ -324,27 +241,8 @@
                   clearInterval(shotClockInterval);
                   isGameRunning = false;
                   isShotClockRunning = false;
-                  playAudio('final.mp3'); // Toca o som de "game over"
-              }
-          }, 1000);
-      }
-
-      // Inicia ou continua o shot clock
-      function startShotClock(reset = false) {
-          if (isShotClockRunning && !reset) return;
-          isShotClockRunning = true;
-          shotClockInterval = setInterval(() => {
-              shotClockTime--;
-              updateShotClock();
-
-              // Sons de aviso
-              if (shotClockTime === 10) playAudio('10.mp3');
-              if (shotClockTime === 5) playAudio('5.mp3');
-              if (shotClockTime <= 0) {
-                  // Reseta para 24 e continua a contagem
-                  shotClockTime = 24;
-                  updateShotClock();
-                  playAudio('estouro.mp3');
+                  document.getElementById('sound-game-over').play();
+                  document.getElementById('sound-time-up').play(); // Toca o som "estouro.mp3" aqui
               }
           }, 1000);
       }
@@ -353,121 +251,24 @@
       function toggleGameTimer() {
           if (isGameRunning) {
               clearInterval(gameTimerInterval);
-              clearInterval(shotClockInterval);
               isGameRunning = false;
-              isShotClockRunning = false;
               startPauseGameButton.textContent = "Iniciar Jogo";
           } else {
               startGameTimer();
-              startShotClock();
           }
       }
 
       // Reseta o cronômetro do jogo e do shot clock
-      function resetGameTimer() {
+      function resetAll() {
           clearInterval(gameTimerInterval);
           clearInterval(shotClockInterval);
           gameTime = 12 * 60;
           shotClockTime = 24;
           updateGameTimer();
           updateShotClock();
-          isGameRunning = false;
-          isShotClockRunning = false;
-          startPauseGameButton.textContent = "Iniciar Jogo";
-      }
-
-      // Reseta o shot clock para 24 segundos e continua a contagem
-      function resetShotClockTo24() {
-          clearInterval(shotClockInterval);
-          shotClockTime = 24;
-          updateShotClock();
-          startShotClock(true);
-      }
-
-      // Reseta o shot clock para 14 segundos e continua a contagem
-      function resetShotClockTo14() {
-          clearInterval(shotClockInterval);
-          shotClockTime = 14;
-          updateShotClock();
-          startShotClock(true);
-      }
-
-      // Reseta o placar e o tempo geral
-      function resetAll() {
-          resetGameTimer();
           document.getElementById('blue-score').textContent = "0";
           document.getElementById('white-score').textContent = "0";
-          localStorage.removeItem('whiteScore');
-          localStorage.removeItem('blueScore');
       }
-
-      // Controle de som para o pedido de tempo
-      timeRequestButton.addEventListener('click', () => {
-          playAudio('tempo.mp3');
-      });
-
-      // Controle dos botões de ajuste de tempo do jogo
-      document.getElementById('game-time-increase').addEventListener('click', () => {
-          gameTime += 10;
-          updateGameTimer();
-      });
-
-      document.getElementById('game-time-decrease').addEventListener('click', () => {
-          gameTime = Math.max(0, gameTime - 10);
-          updateGameTimer();
-      });
-
-      // Controle dos botões de ajuste do shot clock
-      document.getElementById('shot-clock-increase').addEventListener('click', () => {
-          shotClockTime = Math.min(99, shotClockTime + 1);
-          updateShotClock();
-      });
-
-      document.getElementById('shot-clock-decrease').addEventListener('click', () => {
-          shotClockTime = Math.max(0, shotClockTime - 1);
-          updateShotClock();
-      });
-
-      // Controle dos botões de reset
-      document.getElementById('reset-24').addEventListener('click', resetShotClockTo24);
-      document.getElementById('reset-14').addEventListener('click', resetShotClockTo14);
-
-      // Controle do botão de reset geral
-      document.getElementById('reset-game').addEventListener('click', resetAll);
-
-      // Controle do botão de fullscreen
-      fullscreenButton.addEventListener('click', () => {
-          if (!isFullscreen) {
-              document.documentElement.requestFullscreen();
-              fullscreenButton.textContent = "Sair da Tela Cheia";
-              isFullscreen = true;
-          } else {
-              document.exitFullscreen();
-              fullscreenButton.textContent = "Tela Cheia";
-              isFullscreen = false;
-          }
-      });
-
-      // Adiciona event listeners para os novos botões de função
-      document.getElementById('f1-button').addEventListener('click', () => {
-          playAudio('f1.mp3');
-      });
-
-      document.getElementById('f2-button').addEventListener('click', () => {
-          playAudio('f2.mp3');
-      });
-
-      document.getElementById('f3-button').addEventListener('click', () => {
-          playAudio('f3.mp3');
-      });
-
-      document.getElementById('f4-button').addEventListener('click', () => {
-          playAudio('f4.mp3');
-      });
-
-      document.getElementById('f5-button').addEventListener('click', () => {
-          playAudio('f5.mp3');
-      });
 
       // Inicializa o cronômetro do jogo e do shot clock
       updateGameTimer();
@@ -475,47 +276,6 @@
 
       // Adiciona o evento de clique ao botão de iniciar jogo
       startPauseGameButton.addEventListener('click', toggleGameTimer);
-
-      // Sugestão de instalação do aplicativo
-      let deferredPrompt;
-
-      window.addEventListener('beforeinstallprompt', (e) => {
-          e.preventDefault();
-          deferredPrompt = e;
-          const installButton = document.createElement('button');
-          installButton.innerText = 'Instalar App';
-          document.body.appendChild(installButton);
-
-          installButton.addEventListener('click', () => {
-              installButton.style.display = 'none';
-              deferredPrompt.prompt();
-              deferredPrompt.userChoice.then((choiceResult) => {
-                  if (choiceResult.outcome ===
-                  'accepted') {
-                      console.log('Usuário aceitou a instalação do app');
-                  } else {
-                      console.log('Usuário rejeitou a instalação do app');
-                  }
-                  deferredPrompt = null;
-              });
-          });
-      });
-
-      // Registrar o Service Worker
-      if ('serviceWorker' in navigator) {
-          window.addEventListener('load', () => {
-              navigator.serviceWorker.register('service-worker.js')
-                  .then(registration => {
-                      console.log('Service Worker registrado com sucesso:', registration);
-                  })
-                  .catch(error => {
-                      console.log('Falha ao registrar o Service Worker:', error);
-                  });
-          });
-      }
-
-      // Inicializa o aplicativo
-      initApp();
   </script>
 </body>
 </html>
