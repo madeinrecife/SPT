@@ -217,7 +217,7 @@
     <audio id="sound-f5" src="f5.mp3" preload="auto"></audio>
 
     <script>
-        const maxScore = 200;
+        const maxScore = 21;
         let whiteFouls = 0;
         let blueFouls = 0;
 
@@ -341,8 +341,8 @@
                     clearInterval(shotClockInterval);
                     isGameRunning = false;
                     isShotClockRunning = false;
-                    playAudio('sound-game-over');
-                    playAudio('sound-time-up'); // Toca o som "estouro.mp3" aqui
+                    soundGameOver.play();
+                  soundTimeUp.play(); // Toca o som "estouro.mp3" aqui
                 }
             }, 1000);
         }
