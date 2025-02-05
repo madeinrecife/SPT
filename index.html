@@ -108,6 +108,7 @@
             font-weight: bold;
             color: #fff;
             cursor: pointer;
+            transition: background-color 0.5s;
         }
 
         .foul-white {
@@ -119,24 +120,35 @@
             background-color: blue;
         }
 
-        .volume-control {
-            margin-top: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .volume-control label {
-            font-size: 16px;
-        }
-
-        .volume-control input[type="range"] {
-            width: 150px;
-        }
-
         /* Ajuste no tamanho da logo */
         #logo img {
             max-width: 50px; /* Reduzido para 50px */
+        }
+
+        /* Cores personalizadas para os botões de faltas */
+        #white-controls button[onclick*="adjustFouls"] {
+            background-color: white;
+            color: black;
+        }
+
+        #blue-controls button[onclick*="adjustFouls"] {
+            background-color: blue;
+            color: white;
+        }
+
+        /* Estilo para o seletor de voz */
+        .voice-selector {
+            margin-top: 20px;
+        }
+
+        .voice-selector label {
+            font-size: 16px;
+        }
+
+        .voice-selector select {
+            padding: 5px;
+            font-size: 14px;
+            border-radius: 5px;
         }
     </style>
 </head>
@@ -200,11 +212,10 @@
         <!-- Botão de Tela Cheia -->
         <button id="fullscreen-button">Tela Cheia</button>
 
-        <!-- Controle de Volume -->
-        <div class="volume-control">
-            <label for="volume-slider">Volume:</label>
-            <input type="range" id="volume-slider" min="0" max="3" step="0.1" value="1">
-            <span id="volume-value">100%</span>
+        <!-- Seletor de Voz -->
+        <div class="voice-selector">
+            <label for="voice-select">Escolha a voz:</label>
+            <select id="voice-select"></select>
         </div>
     </div>
 
@@ -212,65 +223,141 @@
         const maxScore = 200; // Aumentado para 200 pontos
         let whiteFouls = 0;
         let blueFouls = 0;
-        let currentVolume = 1; // Volume padrão (100%)
+        let whiteFoulBlinkInterval;
+        let blueFoulBlinkInterval;
+        let voices = [];
+        let selectedVoice = null;
 
-        // Função para ajustar o volume
-        function updateVolume(value) {
-            currentVolume = value;
-            document.getElementById('volume-value').textContent = `${Math.round(value * 100)}%`;
+        // Carrega as vozes disponíveis
+        function loadVoices() {
+            voices = window.speechSynthesis.getVoices();
+            const voiceSelect = document.getElementById('voice-select');
+            voiceSelect.innerHTML = '';
+
+            voices.forEach((voice, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `${voice.name} (${voice.lang})`;
+                voiceSelect.appendChild(option);
+            });
+
+            // Seleciona a primeira voz por padrão
+            if (voices.length > 0) {
+                selectedVoice = voices[0];
+            }
         }
 
-        // Configura o controle de volume
-        const volumeSlider = document.getElementById('volume-slider');
-        volumeSlider.addEventListener('input', (e) => {
-            updateVolume(parseFloat(e.target.value));
-        });
+        // Configura o seletor de voz
+        window.speechSynthesis.onvoiceschanged = loadVoices;
 
+        // Função para falar texto
         function speak(text) {
+            window.speechSynthesis.cancel(); // Cancela qualquer fala em andamento
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.volume = currentVolume; // Aplica o volume atual
+            utterance.voice = selectedVoice; // Define a voz selecionada
             window.speechSynthesis.speak(utterance);
         }
 
         // Função para tocar a buzina
         function playHorn() {
             const hornSound = new Audio('buzina.mp3');
-            hornSound.volume = currentVolume; // Aplica o volume atual
             hornSound.play();
         }
 
         // Ajusta o placar dos times
-        function adjustScore(team, delta) {
+        function adjustScore(team, delta, silent = false) {
             const scoreElement = document.getElementById(`${team}-score`);
             let currentScore = parseInt(scoreElement.textContent);
             let newScore = currentScore + delta;
 
             if (newScore >= 0 && newScore <= maxScore) {
                 scoreElement.textContent = newScore;
-                speak(`${team === 'white' ? 'Branco' : 'Azul'} ${newScore}`);
+                if (!silent) {
+                    speak(`${team === 'white' ? 'Branco' : 'Azul'} ${newScore}`);
+                }
             }
         }
 
+        // Função para piscar o quadrado de faltas
+        function toggleFoulBlink(team) {
+            const foulElement = document.getElementById(`${team}-foul`);
+            const originalColor = team === 'white' ? 'white' : 'blue';
+            let isRed = false;
+
+            return setInterval(() => {
+                isRed = !isRed;
+                foulElement.style.backgroundColor = isRed ? 'red' : originalColor;
+            }, 500); // Alterna a cada 500ms
+        }
+
         // Ajusta as faltas coletivas
-        function adjustFouls(team, delta) {
+        function adjustFouls(team, delta, silent = false) {
             if (team === 'white') {
                 whiteFouls = Math.max(0, whiteFouls + delta);
                 document.getElementById('white-foul').textContent = whiteFouls;
-                if (whiteFouls === 5) {
-                    speak("Branco faltas estouradas!");
-                } else {
-                    speak(`Falta ${whiteFouls} branco`);
+
+                // Para o piscar se o número de faltas for menor que 5
+                if (whiteFouls < 5 && whiteFoulBlinkInterval) {
+                    clearInterval(whiteFoulBlinkInterval);
+                    whiteFoulBlinkInterval = null;
+                    document.getElementById('white-foul').style.backgroundColor = 'white';
+                }
+
+                // Inicia o piscar se o número de faltas for 5
+                if (whiteFouls === 5 && !whiteFoulBlinkInterval) {
+                    whiteFoulBlinkInterval = toggleFoulBlink('white');
+                }
+
+                if (!silent) {
+                    if (whiteFouls === 5) {
+                        speak("Branco faltas estouradas!");
+                    } else {
+                        speak(`Falta ${whiteFouls} branco`);
+                    }
                 }
             } else if (team === 'blue') {
                 blueFouls = Math.max(0, blueFouls + delta);
                 document.getElementById('blue-foul').textContent = blueFouls;
-                if (blueFouls === 5) {
-                    speak("Azul faltas estouradas!");
-                } else {
-                    speak(`Falta ${blueFouls} azul`);
+
+                // Para o piscar se o número de faltas for menor que 5
+                if (blueFouls < 5 && blueFoulBlinkInterval) {
+                    clearInterval(blueFoulBlinkInterval);
+                    blueFoulBlinkInterval = null;
+                    document.getElementById('blue-foul').style.backgroundColor = 'blue';
+                }
+
+                // Inicia o piscar se o número de faltas for 5
+                if (blueFouls === 5 && !blueFoulBlinkInterval) {
+                    blueFoulBlinkInterval = toggleFoulBlink('blue');
+                }
+
+                if (!silent) {
+                    if (blueFouls === 5) {
+                        speak("Azul faltas estouradas!");
+                    } else {
+                        speak(`Falta ${blueFouls} azul`);
+                    }
                 }
             }
         }
+
+        // Evento de clique para diminuir 1 ponto ao clicar no placar (sem falar)
+        document.getElementById('white-score').addEventListener('click', () => {
+            adjustScore('white', -1, true); // silent = true
+        });
+
+        document.getElementById('blue-score').addEventListener('click', () => {
+            adjustScore('blue', -1, true); // silent = true
+        });
+
+        // Evento de clique para diminuir 1 falta ao clicar no placar de faltas (sem falar)
+        document.getElementById('white-foul').addEventListener('click', () => {
+            adjustFouls('white', -1, true); // silent = true
+        });
+
+        document.getElementById('blue-foul').addEventListener('click', () => {
+            adjustFouls('blue', -1, true); // silent = true
+        });
 
         // Variáveis Globais
         let gameTimerInterval;
@@ -287,6 +374,7 @@
         const startPauseGameButton = document.getElementById('start-pause-game');
         const timeRequestButton = document.getElementById('time-request');
         const fullscreenButton = document.getElementById('fullscreen-button');
+        const voiceSelect = document.getElementById('voice-select');
 
         // Função para formatar o tempo em minutos e segundos
         function formatTime(seconds) {
@@ -334,8 +422,8 @@
                 updateShotClock();
 
                 // Sons de aviso
-                if (shotClockTime === 10 || shotClockTime === 5) {
-                    speak(shotClockTime.toString());
+                if (shotClockTime === 10 || shotClockTime === 5 || shotClockTime === 3 || shotClockTime === 2 || shotClockTime === 1) {
+                    speak(shotClockTime.toString()); // Fala 10, 5, 3, 2, 1
                 }
 
                 if (shotClockTime <= 0) {
@@ -379,6 +467,18 @@
             document.getElementById('white-foul').textContent = "0";
             document.getElementById('blue-foul').textContent = "0";
             speak("O jogo foi resetado.");
+
+            // Para o piscar e reseta as cores
+            if (whiteFoulBlinkInterval) {
+                clearInterval(whiteFoulBlinkInterval);
+                whiteFoulBlinkInterval = null;
+                document.getElementById('white-foul').style.backgroundColor = 'white';
+            }
+            if (blueFoulBlinkInterval) {
+                clearInterval(blueFoulBlinkInterval);
+                blueFoulBlinkInterval = null;
+                document.getElementById('blue-foul').style.backgroundColor = 'blue';
+            }
         }
 
         // Reseta o shot clock para 24 segundos e continua a contagem
@@ -442,6 +542,12 @@
                 fullscreenButton.textContent = "Tela Cheia";
                 isFullscreen = false;
             }
+        });
+
+        // Controle do seletor de voz
+        voiceSelect.addEventListener('change', () => {
+            const selectedIndex = voiceSelect.value;
+            selectedVoice = voices[selectedIndex];
         });
 
         // Inicializa o cronômetro do jogo e do shot clock
