@@ -195,7 +195,7 @@
             <button id="reset-game">Reset Geral</button>
         </div>
 
-        <!-- Timer de 24 e 14 Segundos com botões de ajuste -->
+        <!-- Timer de 24, 14 e 12 Segundos com botões de ajuste -->
         <div id="shot-clock">
             <button class="adjust-buttons" id="shot-clock-decrease">-</button>
             <span id="shot-clock-display">24</span>
@@ -204,6 +204,7 @@
         <div class="shot-clock-buttons">
             <button id="reset-24">24s</button>
             <button id="reset-14">14s</button>
+            <button id="reset-12">12s</button>
         </div>
 
         <!-- Botão de Pedido de Tempo -->
@@ -497,6 +498,14 @@
             startShotClock(true);
         }
 
+        // Reseta o shot clock para 12 segundos e continua a contagem
+        function resetShotClockTo12() {
+            clearInterval(shotClockInterval);
+            shotClockTime = 12;
+            updateShotClock();
+            startShotClock(true);
+        }
+
         // Controle do botão de reset geral
         document.getElementById('reset-game').addEventListener('click', resetAll);
 
@@ -525,6 +534,7 @@
         // Controle dos botões de reset do shot clock
         document.getElementById('reset-24').addEventListener('click', resetShotClockTo24);
         document.getElementById('reset-14').addEventListener('click', resetShotClockTo14);
+        document.getElementById('reset-12').addEventListener('click', resetShotClockTo12);
 
         // Controle de som para o pedido de tempo
         timeRequestButton.addEventListener('click', () => {
