@@ -43,23 +43,12 @@
             gap: 15px;
         }
 
-        /* Header */
-        .header {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 5px;
-        }
-
-        .logo {
-            height: 50px;
-            width: auto;
-        }
-
         /* Scoreboard */
         .scoreboard {
             display: flex;
             justify-content: space-between;
-            gap: 10px;
+            align-items: center;
+            gap: 5px;
             width: 100%;
         }
 
@@ -81,6 +70,20 @@
         .team-blue {
             background-color: var(--cor-azul);
             color: var(--cor-branco);
+        }
+
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 60px;
+            width: 60px;
+        }
+
+        .logo {
+            height: 50px;
+            width: auto;
+            max-width: 100%;
         }
 
         .team-name {
@@ -295,15 +298,32 @@
             background-color: #7b1fa2;
         }
 
+        .btn-config {
+            background-color: #607d8b;
+        }
+
+        .btn-config:hover {
+            background-color: #455a64;
+        }
+
         /* Config Menu */
         .config-menu {
             background-color: var(--cor-botao);
             border-radius: 10px;
             padding: 15px;
-            margin-top: 15px;
-            display: flex;
+            margin-top: 10px;
+            display: none;
             flex-direction: column;
             gap: 15px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+        }
+
+        .config-menu.open {
+            display: flex;
+            max-height: 500px;
+            padding: 15px;
         }
 
         .team-inputs {
@@ -362,6 +382,15 @@
             .timer-display {
                 font-size: 1.5rem;
             }
+
+            .logo-container {
+                height: 50px;
+                width: 50px;
+            }
+
+            .logo {
+                height: 40px;
+            }
         }
 
         /* Landscape orientation */
@@ -386,21 +415,30 @@
             .btn {
                 min-width: 60px;
             }
+
+            .logo-container {
+                height: 40px;
+                width: 40px;
+                margin: 5px 0;
+            }
+
+            .logo {
+                height: 35px;
+            }
         }
     </style>
 </head>
 <body>
     <div id="app">
-        <!-- Header -->
-        <div class="header">
-            <img src="basquete.gif" alt="Basquete" class="logo">
-        </div>
-
         <!-- Scoreboard -->
         <div class="scoreboard">
             <div class="team team-white" id="white-team">
                 <div class="team-name" id="white-team-name-display">Branco</div>
                 <div class="team-score" id="white-score">0</div>
+            </div>
+            
+            <div class="logo-container">
+                <img src="basquete.gif" alt="Basquete" class="logo">
             </div>
             
             <div class="team team-blue" id="blue-team">
@@ -489,11 +527,12 @@
             </div>
             <div class="action-row">
                 <button class="btn btn-action btn-fullscreen" id="fullscreen-button">TELA CHEIA</button>
+                <button class="btn btn-action btn-config" id="config-button">CONFIG</button>
             </div>
         </div>
 
         <!-- Config Menu -->
-        <div class="config-menu">
+        <div class="config-menu" id="config-menu">
             <div class="team-inputs">
                 <div class="input-group">
                     <label for="white-team-name">Time Branco:</label>
@@ -544,6 +583,7 @@
         let tempoPosseRodando = false;
         let telaCheia = false;
         let ultimoTempoAnunciado = 0;
+        let configMenuAberto = false;
 
         // Elementos HTML
         const elementoPlacarBranco = document.getElementById('white-score');
@@ -559,6 +599,7 @@
         const botaoPedirTempo = document.getElementById('time-request');
         const botaoBuzina = document.getElementById('horn-button');
         const botaoTelaCheia = document.getElementById('fullscreen-button');
+        const botaoConfig = document.getElementById('config-button');
         const inputNomeTimeBranco = document.getElementById('white-team-name');
         const inputNomeTimeAzul = document.getElementById('blue-team-name');
         const botaoSalvarNomes = document.getElementById('save-names');
@@ -566,6 +607,7 @@
         const seletorVoz = document.getElementById('voice-select');
         const botaoAumentarPeriodo = document.getElementById('increase-period');
         const botaoDiminuirPeriodo = document.getElementById('decrease-period');
+        const configMenu = document.getElementById('config-menu');
 
         // Carrega as vozes disponíveis
         function carregarVozes() {
@@ -924,6 +966,18 @@
             }
         }
 
+        // Alternar menu de configurações
+        function alternarConfigMenu() {
+            configMenuAberto = !configMenuAberto;
+            if (configMenuAberto) {
+                configMenu.classList.add('open');
+                botaoConfig.textContent = "FECHAR";
+            } else {
+                configMenu.classList.remove('open');
+                botaoConfig.textContent = "CONFIG";
+            }
+        }
+
         // Event Listeners
         document.getElementById('white-team').addEventListener('click', () => {
             ajustarPlacar('white', -1, true);
@@ -968,6 +1022,7 @@
         botaoPedirTempo.addEventListener('click', pedirTempo);
         botaoBuzina.addEventListener('click', tocarBuzina);
         botaoTelaCheia.addEventListener('click', alternarTelaCheia);
+        botaoConfig.addEventListener('click', alternarConfigMenu);
         botaoSalvarNomes.addEventListener('click', salvarConfiguracoes);
         botaoResetarTudo.addEventListener('click', resetarTudo);
         botaoIniciarPausar.addEventListener('click', alternarTempoJogo);
