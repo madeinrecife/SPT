@@ -356,6 +356,18 @@
             gap: 10px;
         }
 
+        .time-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: space-between;
+        }
+
+        .time-option {
+            flex: 1;
+            min-width: calc(50% - 5px);
+        }
+
         /* Blinking effect for fouls */
         @keyframes blink {
             0% { opacity: 1; }
@@ -451,23 +463,23 @@
         <div class="team-controls">
             <div class="control-group">
                 <div class="control-row">
-                    <button class="btn btn-point" onclick="ajustarPlacar('white', 1)">+1</button>
-                    <button class="btn btn-point" onclick="ajustarPlacar('white', 2)">+2</button>
+                    <button class="btn btn-point" onclick="adjustScore('white', 1)">+1</button>
+                    <button class="btn btn-point" onclick="adjustScore('white', 2)">+2</button>
                 </div>
                 <div class="control-row">
-                    <button class="btn btn-point" onclick="ajustarPlacar('white', 3)">+3</button>
-                    <button class="btn btn-foul" onclick="ajustarFaltas('white', 1)">Falta</button>
+                    <button class="btn btn-point" onclick="adjustScore('white', 3)">+3</button>
+                    <button class="btn btn-foul" onclick="adjustFouls('white', 1)">Falta</button>
                 </div>
             </div>
             
             <div class="control-group">
                 <div class="control-row">
-                    <button class="btn btn-point" onclick="ajustarPlacar('blue', 1)">+1</button>
-                    <button class="btn btn-point" onclick="ajustarPlacar('blue', 2)">+2</button>
+                    <button class="btn btn-point" onclick="adjustScore('blue', 1)">+1</button>
+                    <button class="btn btn-point" onclick="adjustScore('blue', 2)">+2</button>
                 </div>
                 <div class="control-row">
-                    <button class="btn btn-point" onclick="ajustarPlacar('blue', 3)">+3</button>
-                    <button class="btn btn-foul" onclick="ajustarFaltas('blue', 1)">Falta</button>
+                    <button class="btn btn-point" onclick="adjustScore('blue', 3)">+3</button>
+                    <button class="btn btn-foul" onclick="adjustFouls('blue', 1)">Falta</button>
                 </div>
             </div>
         </div>
@@ -549,6 +561,16 @@
                 <select id="voice-select"></select>
             </div>
             
+            <div class="input-group">
+                <label>Tempo de Jogo:</label>
+                <div class="time-options">
+                    <button class="btn time-option" onclick="setGameTime(5)">5 Min</button>
+                    <button class="btn time-option" onclick="setGameTime(10)">10 Min</button>
+                    <button class="btn time-option" onclick="setGameTime(12)">12 Min</button>
+                    <button class="btn time-option" onclick="setGameTime(15)">15 Min</button>
+                </div>
+            </div>
+            
             <div class="config-buttons">
                 <button class="btn" id="save-names">Salvar</button>
                 <button class="btn" id="reset-all">Resetar</button>
@@ -558,489 +580,566 @@
 
     <script>
         // Variáveis Globais
-        const pontuacaoMaxima = 200;
-        const MAX_PERIODOS = 4;
-        const TEMPO_POR_PERIODO = 12 * 60; // 12 minutos em segundos
+        const MAX_SCORE = 200;
+        const MAX_PERIODS = 4;
+        const PERIOD_TIME = 12 * 60; // 12 minutos em segundos
+        const OVERTIME_TIME = 5 * 60; // 5 minutos em segundos
         
-        let placarBranco = 0;
-        let placarAzul = 0;
-        let faltasBranco = 0;
-        let faltasAzul = 0;
-        let nomeTimeBranco = "Branco";
-        let nomeTimeAzul = "Azul";
-        let periodoAtual = 1;
-        let intervaloPiscarFaltasBranco;
-        let intervaloPiscarFaltasAzul;
-        let vozes = [];
-        let vozSelecionada = null;
+        let whiteScore = 0;
+        let blueScore = 0;
+        let whiteFouls = 0;
+        let blueFouls = 0;
+        let whiteTeamName = "Branco";
+        let blueTeamName = "Azul";
+        let currentPeriod = 1;
+        let whiteFoulBlinkInterval;
+        let blueFoulBlinkInterval;
+        let voices = [];
+        let selectedVoice = null;
         
         // Timers
-        let intervaloJogo;
-        let intervaloTempoPosse;
-        let tempoJogo = TEMPO_POR_PERIODO;
-        let tempoPosse = 24;
-        let jogoRodando = false;
-        let tempoPosseRodando = false;
-        let telaCheia = false;
-        let ultimoTempoAnunciado = 0;
-        let configMenuAberto = false;
+        let gameInterval;
+        let shotClockInterval;
+        let gameTime = PERIOD_TIME;
+        let shotClockTime = 24;
+        let isGameRunning = false;
+        let isShotClockRunning = false;
+        let isFullscreen = false;
+        let lastAnnouncedShotTime = 0;
+        let isConfigMenuOpen = false;
 
         // Elementos HTML
-        const elementoPlacarBranco = document.getElementById('white-score');
-        const elementoPlacarAzul = document.getElementById('blue-score');
-        const elementoFaltasBranco = document.getElementById('white-foul');
-        const elementoFaltasAzul = document.getElementById('blue-foul');
-        const elementoNomeTimeBranco = document.getElementById('white-team-name-display');
-        const elementoNomeTimeAzul = document.getElementById('blue-team-name-display');
-        const elementoDisplayTempoJogo = document.getElementById('game-time-display');
-        const elementoDisplayTempoPosse = document.getElementById('shot-clock-display');
-        const elementoPeriodoDisplay = document.getElementById('period-display');
-        const botaoIniciarPausar = document.getElementById('start-pause-game');
-        const botaoPedirTempo = document.getElementById('time-request');
-        const botaoBuzina = document.getElementById('horn-button');
-        const botaoTelaCheia = document.getElementById('fullscreen-button');
-        const botaoConfig = document.getElementById('config-button');
-        const inputNomeTimeBranco = document.getElementById('white-team-name');
-        const inputNomeTimeAzul = document.getElementById('blue-team-name');
-        const botaoSalvarNomes = document.getElementById('save-names');
-        const botaoResetarTudo = document.getElementById('reset-all');
-        const seletorVoz = document.getElementById('voice-select');
-        const botaoAumentarPeriodo = document.getElementById('increase-period');
-        const botaoDiminuirPeriodo = document.getElementById('decrease-period');
+        const whiteScoreElement = document.getElementById('white-score');
+        const blueScoreElement = document.getElementById('blue-score');
+        const whiteFoulsElement = document.getElementById('white-foul');
+        const blueFoulsElement = document.getElementById('blue-foul');
+        const whiteTeamNameElement = document.getElementById('white-team-name-display');
+        const blueTeamNameElement = document.getElementById('blue-team-name-display');
+        const gameTimeDisplay = document.getElementById('game-time-display');
+        const shotClockDisplay = document.getElementById('shot-clock-display');
+        const periodDisplay = document.getElementById('period-display');
+        const startPauseButton = document.getElementById('start-pause-game');
+        const timeoutButton = document.getElementById('time-request');
+        const hornButton = document.getElementById('horn-button');
+        const fullscreenButton = document.getElementById('fullscreen-button');
+        const configButton = document.getElementById('config-button');
+        const whiteTeamNameInput = document.getElementById('white-team-name');
+        const blueTeamNameInput = document.getElementById('blue-team-name');
+        const saveNamesButton = document.getElementById('save-names');
+        const resetAllButton = document.getElementById('reset-all');
+        const voiceSelect = document.getElementById('voice-select');
+        const increasePeriodButton = document.getElementById('increase-period');
+        const decreasePeriodButton = document.getElementById('decrease-period');
         const configMenu = document.getElementById('config-menu');
 
         // Carrega as vozes disponíveis
-        function carregarVozes() {
-            vozes = window.speechSynthesis.getVoices();
-            seletorVoz.innerHTML = '';
+        function loadVoices() {
+            voices = window.speechSynthesis.getVoices();
+            voiceSelect.innerHTML = '';
 
-            vozes.forEach((voz, indice) => {
-                const opcao = document.createElement('option');
-                opcao.value = indice;
-                opcao.textContent = `${voz.name} (${voz.lang})`;
-                seletorVoz.appendChild(opcao);
+            voices.forEach((voice, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `${voice.name} (${voice.lang})`;
+                voiceSelect.appendChild(option);
             });
 
-            if (vozes.length > 0) {
-                vozSelecionada = vozes[0];
+            if (voices.length > 0) {
+                selectedVoice = voices[0];
             }
         }
 
         // Configura o seletor de voz
-        window.speechSynthesis.onvoiceschanged = carregarVozes;
+        window.speechSynthesis.onvoiceschanged = loadVoices;
 
         // Função para falar texto
-        function falar(texto) {
+        function speak(text) {
             if (!window.speechSynthesis) {
                 console.warn("Síntese de voz não disponível");
                 return;
             }
             
             window.speechSynthesis.cancel();
-            const fala = new SpeechSynthesisUtterance(texto);
-            fala.voice = vozSelecionada;
-            fala.rate = 1.0;
-            fala.pitch = 1.0;
-            window.speechSynthesis.speak(fala);
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.voice = selectedVoice;
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            window.speechSynthesis.speak(utterance);
         }
 
         // Função para tocar a buzina
-        function tocarBuzina() {
+        function playHorn() {
             try {
-                const somBuzina = new Audio('buzina.mp3');
-                somBuzina.play().catch(e => console.log("Erro ao tocar buzina:", e));
+                const hornSound = new Audio('buzina.mp3');
+                hornSound.play().catch(e => console.log("Erro ao tocar buzina:", e));
             } catch (e) {
                 console.log("Erro ao carregar buzina:", e);
             }
         }
 
         // Salva as configurações
-        function salvarConfiguracoes() {
-            nomeTimeBranco = inputNomeTimeBranco.value.trim() || "Branco";
-            nomeTimeAzul = inputNomeTimeAzul.value.trim() || "Azul";
+        function saveSettings() {
+            whiteTeamName = whiteTeamNameInput.value.trim() || "Branco";
+            blueTeamName = blueTeamNameInput.value.trim() || "Azul";
             
-            elementoNomeTimeBranco.textContent = nomeTimeBranco;
-            elementoNomeTimeAzul.textContent = nomeTimeAzul;
+            whiteTeamNameElement.textContent = whiteTeamName;
+            blueTeamNameElement.textContent = blueTeamName;
             
-            const indiceSelecionado = seletorVoz.value;
-            vozSelecionada = vozes[indiceSelecionado];
+            const selectedIndex = voiceSelect.value;
+            selectedVoice = voices[selectedIndex];
             
             // Salva no localStorage
-            localStorage.setItem('timeBranco', nomeTimeBranco);
-            localStorage.setItem('timeAzul', nomeTimeAzul);
-            localStorage.setItem('vozSelecionada', indiceSelecionado);
+            localStorage.setItem('whiteTeamName', whiteTeamName);
+            localStorage.setItem('blueTeamName', blueTeamName);
+            localStorage.setItem('selectedVoice', selectedIndex);
             
-            falar("Configurações salvas");
+            speak("Configurações salvas");
         }
 
         // Carrega configurações salvas
-        function carregarConfiguracoes() {
-            const savedTimeBranco = localStorage.getItem('timeBranco');
-            const savedTimeAzul = localStorage.getItem('timeAzul');
-            const savedVoz = localStorage.getItem('vozSelecionada');
+        function loadSettings() {
+            const savedWhiteTeam = localStorage.getItem('whiteTeamName');
+            const savedBlueTeam = localStorage.getItem('blueTeamName');
+            const savedVoice = localStorage.getItem('selectedVoice');
             
-            if (savedTimeBranco) {
-                nomeTimeBranco = savedTimeBranco;
-                inputNomeTimeBranco.value = savedTimeBranco;
-                elementoNomeTimeBranco.textContent = savedTimeBranco;
+            if (savedWhiteTeam) {
+                whiteTeamName = savedWhiteTeam;
+                whiteTeamNameInput.value = savedWhiteTeam;
+                whiteTeamNameElement.textContent = savedWhiteTeam;
             }
             
-            if (savedTimeAzul) {
-                nomeTimeAzul = savedTimeAzul;
-                inputNomeTimeAzul.value = savedTimeAzul;
-                elementoNomeTimeAzul.textContent = savedTimeAzul;
+            if (savedBlueTeam) {
+                blueTeamName = savedBlueTeam;
+                blueTeamNameInput.value = savedBlueTeam;
+                blueTeamNameElement.textContent = savedBlueTeam;
             }
             
-            if (savedVoz && vozes[savedVoz]) {
-                seletorVoz.value = savedVoz;
-                vozSelecionada = vozes[savedVoz];
+            if (savedVoice && voices[savedVoice]) {
+                voiceSelect.value = savedVoice;
+                selectedVoice = voices[savedVoice];
             }
         }
 
         // Efeito visual ao atualizar placar
-        function efeitoAtualizacaoPlacar(elemento) {
-            elemento.classList.add('score-updated');
+        function scoreUpdateEffect(element) {
+            element.classList.add('score-updated');
             setTimeout(() => {
-                elemento.classList.remove('score-updated');
+                element.classList.remove('score-updated');
             }, 300);
         }
 
         // Ajusta o placar dos times
-        function ajustarPlacar(time, pontos, silencioso = false) {
-            let placarAtual, novoPlacar, nomeTime, elementoPlacar;
+        function adjustScore(team, points, silent = false) {
+            let currentScore, newScore, teamName, scoreElement;
             
-            if (time === 'white') {
-                placarAtual = placarBranco;
-                novoPlacar = Math.max(0, Math.min(pontuacaoMaxima, placarAtual + pontos));
-                placarBranco = novoPlacar;
-                elementoPlacar = elementoPlacarBranco;
-                elementoPlacar.textContent = novoPlacar;
-                nomeTime = nomeTimeBranco;
+            if (team === 'white') {
+                currentScore = whiteScore;
+                newScore = Math.max(0, Math.min(MAX_SCORE, currentScore + points));
+                whiteScore = newScore;
+                scoreElement = whiteScoreElement;
+                scoreElement.textContent = newScore;
+                teamName = whiteTeamName;
             } else {
-                placarAtual = placarAzul;
-                novoPlacar = Math.max(0, Math.min(pontuacaoMaxima, placarAtual + pontos));
-                placarAzul = novoPlacar;
-                elementoPlacar = elementoPlacarAzul;
-                elementoPlacar.textContent = novoPlacar;
-                nomeTime = nomeTimeAzul;
+                currentScore = blueScore;
+                newScore = Math.max(0, Math.min(MAX_SCORE, currentScore + points));
+                blueScore = newScore;
+                scoreElement = blueScoreElement;
+                scoreElement.textContent = newScore;
+                teamName = blueTeamName;
             }
             
-            efeitoAtualizacaoPlacar(elementoPlacar);
+            scoreUpdateEffect(scoreElement);
             
-            if (!silencioso) {
-                falar(`${nomeTime} ${novoPlacar} pontos`);
+            if (!silent) {
+                speak(`${teamName} ${newScore} pontos`);
             }
         }
 
         // Ajusta as faltas coletivas
-        function ajustarFaltas(time, faltas, silencioso = false) {
-            let totalFaltas, elementoFalta, nomeTime;
+        function adjustFouls(team, fouls, silent = false) {
+            let totalFouls, foulElement, teamName;
             
-            if (time === 'white') {
-                faltasBranco = Math.max(0, faltasBranco + faltas);
-                totalFaltas = faltasBranco;
-                elementoFalta = elementoFaltasBranco;
-                elementoFalta.textContent = totalFaltas;
-                nomeTime = nomeTimeBranco;
+            if (team === 'white') {
+                whiteFouls = Math.max(0, whiteFouls + fouls);
+                totalFouls = whiteFouls;
+                foulElement = whiteFoulsElement;
+                foulElement.textContent = totalFouls;
+                teamName = whiteTeamName;
             } else {
-                faltasAzul = Math.max(0, faltasAzul + faltas);
-                totalFaltas = faltasAzul;
-                elementoFalta = elementoFaltasAzul;
-                elementoFalta.textContent = totalFaltas;
-                nomeTime = nomeTimeAzul;
+                blueFouls = Math.max(0, blueFouls + fouls);
+                totalFouls = blueFouls;
+                foulElement = blueFoulsElement;
+                foulElement.textContent = totalFouls;
+                teamName = blueTeamName;
             }
 
             // Remove classe blinking se tiver menos que 5 faltas
-            if (totalFaltas < 5) {
-                elementoFalta.classList.remove('blinking');
+            if (totalFouls < 5) {
+                foulElement.classList.remove('blinking');
             }
 
             // Adiciona classe blinking se tiver 5 faltas
-            if (totalFaltas >= 5) {
-                elementoFalta.classList.add('blinking');
+            if (totalFouls >= 5) {
+                foulElement.classList.add('blinking');
             }
 
-            if (!silencioso) {
-                if (totalFaltas === 5) {
-                    falar(`${nomeTime} com faltas estouradas!`);
+            if (!silent) {
+                if (totalFouls === 5) {
+                    speak(`${teamName} com faltas estouradas!`);
                 } else {
-                    falar(`${totalFaltas} faltas para ${nomeTime}`);
+                    speak(`${totalFouls} faltas para ${teamName}`);
                 }
             }
         }
 
         // Função para formatar o tempo em minutos e segundos
-        function formatarTempo(segundos) {
-            const minutos = Math.floor(segundos / 60);
-            const segs = segundos % 60;
-            return `${minutos}:${segs < 10 ? '0' : ''}${segs}`;
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
         }
 
         // Atualiza a exibição do cronômetro do jogo
-        function atualizarTempoJogo() {
-            elementoDisplayTempoJogo.textContent = formatarTempo(tempoJogo);
+        function updateGameTimeDisplay() {
+            gameTimeDisplay.textContent = formatTime(gameTime);
         }
 
         // Atualiza a exibição do cronômetro do tempo de posse
-        function atualizarTempoPosse() {
-            elementoDisplayTempoPosse.textContent = tempoPosse;
+        function updateShotClockDisplay() {
+            shotClockDisplay.textContent = shotClockTime;
+        }
+
+        // Define o tempo de jogo em minutos
+        function setGameTime(minutes) {
+            gameTime = minutes * 60;
+            updateGameTimeDisplay();
+            speak(`Tempo de jogo definido para ${minutes} minutos`);
         }
 
         // Anuncia o tempo de posse (sem anunciar o zero)
-        function anunciarTempoPosse() {
-            if (tempoPosse === 0) {
-                ultimoTempoAnunciado = 0;
+        function announceShotClock() {
+            if (shotClockTime === 0) {
+                lastAnnouncedShotTime = 0;
                 return;
             }
             
-            if (tempoPosse === 10 || tempoPosse === 5 || tempoPosse <= 3) {
-                if (tempoPosse !== ultimoTempoAnunciado) {
-                    falar(tempoPosse.toString());
-                    ultimoTempoAnunciado = tempoPosse;
+            if (shotClockTime === 10 || shotClockTime === 5 || shotClockTime <= 3) {
+                if (shotClockTime !== lastAnnouncedShotTime) {
+                    speak(shotClockTime.toString());
+                    lastAnnouncedShotTime = shotClockTime;
                 }
             } else {
-                ultimoTempoAnunciado = 0;
+                lastAnnouncedShotTime = 0;
             }
         }
 
         // Atualiza o display do período
-        function atualizarPeriodo() {
-            elementoPeriodoDisplay.textContent = `${periodoAtual}º Período`;
-            tempoJogo = TEMPO_POR_PERIODO;
-            atualizarTempoJogo();
+        function updatePeriodDisplay() {
+            let periodText;
+            if (currentPeriod <= MAX_PERIODS) {
+                periodText = `${currentPeriod}º Período`;
+            } else {
+                const overtimeNumber = currentPeriod - MAX_PERIODS;
+                periodText = `Prorrogação ${overtimeNumber}`;
+            }
+            
+            periodDisplay.textContent = periodText;
+            
+            // Define o tempo de jogo baseado no período
+            if (currentPeriod <= MAX_PERIODS) {
+                gameTime = PERIOD_TIME;
+            } else {
+                gameTime = OVERTIME_TIME;
+            }
+            
+            updateGameTimeDisplay();
         }
 
         // Avança para o próximo período
-        function avancarPeriodo() {
-            if (periodoAtual < MAX_PERIODOS) {
-                periodoAtual++;
-                atualizarPeriodo();
-                falar(`Início do ${periodoAtual}º período`);
+        function nextPeriod() {
+            currentPeriod++;
+            updatePeriodDisplay();
+            
+            if (currentPeriod <= MAX_PERIODS) {
+                speak(`Início do ${currentPeriod}º período`);
             } else {
-                falar("Fim de jogo");
+                const overtimeNumber = currentPeriod - MAX_PERIODS;
+                speak(`Início da ${overtimeNumber}ª prorrogação`);
             }
         }
 
         // Volta para o período anterior
-        function voltarPeriodo() {
-            if (periodoAtual > 1) {
-                periodoAtual--;
-                atualizarPeriodo();
+        function previousPeriod() {
+            if (currentPeriod > 1) {
+                currentPeriod--;
+                updatePeriodDisplay();
             }
         }
 
         // Inicia o cronômetro do jogo
-        function iniciarTempoJogo() {
-            if (jogoRodando) return;
+        function startGameTimer() {
+            if (isGameRunning) return;
             
-            jogoRodando = true;
-            botaoIniciarPausar.textContent = "Pausar Jogo";
+            isGameRunning = true;
+            startPauseButton.textContent = "Pausar Jogo";
             
-            intervaloJogo = setInterval(() => {
-                tempoJogo--;
-                atualizarTempoJogo();
+            gameInterval = setInterval(() => {
+                gameTime--;
+                updateGameTimeDisplay();
 
-                if (tempoJogo <= 0) {
-                    clearInterval(intervaloJogo);
-                    clearInterval(intervaloTempoPosse);
-                    jogoRodando = false;
-                    tempoPosseRodando = false;
-                    botaoIniciarPausar.textContent = "Iniciar Jogo";
-                    tocarBuzina();
-                    setTimeout(avancarPeriodo, 2000);
+                if (gameTime <= 0) {
+                    clearInterval(gameInterval);
+                    clearInterval(shotClockInterval);
+                    isGameRunning = false;
+                    isShotClockRunning = false;
+                    startPauseButton.textContent = "Iniciar Jogo";
+                    playHorn();
+                    setTimeout(nextPeriod, 2000);
                 }
             }, 1000);
         }
 
         // Inicia ou continua o tempo de posse
-        function iniciarTempoPosse(reset = false) {
-            if (tempoPosseRodando && !reset) return;
+        function startShotClock(reset = false) {
+            if (isShotClockRunning && !reset) return;
             
-            tempoPosseRodando = true;
-            ultimoTempoAnunciado = 0;
+            isShotClockRunning = true;
+            lastAnnouncedShotTime = 0;
             
-            intervaloTempoPosse = setInterval(() => {
-                tempoPosse--;
-                atualizarTempoPosse();
-                anunciarTempoPosse();
+            shotClockInterval = setInterval(() => {
+                shotClockTime--;
+                updateShotClockDisplay();
+                announceShotClock();
 
-                if (tempoPosse <= 0) {
-                    tempoPosse = 24;
-                    atualizarTempoPosse();
-                    tocarBuzina();
+                if (shotClockTime <= 0) {
+                    shotClockTime = 24;
+                    updateShotClockDisplay();
+                    playHorn();
                 }
             }, 1000);
         }
 
         // Alterna a execução do cronômetro do jogo
-        function alternarTempoJogo() {
-            if (jogoRodando) {
-                clearInterval(intervaloJogo);
-                clearInterval(intervaloTempoPosse);
-                jogoRodando = false;
-                tempoPosseRodando = false;
-                botaoIniciarPausar.textContent = "Iniciar Jogo";
+        function toggleGameTimer() {
+            if (isGameRunning) {
+                clearInterval(gameInterval);
+                clearInterval(shotClockInterval);
+                isGameRunning = false;
+                isShotClockRunning = false;
+                startPauseButton.textContent = "Iniciar Jogo";
             } else {
-                iniciarTempoJogo();
-                iniciarTempoPosse();
+                startGameTimer();
+                startShotClock();
             }
         }
 
         // Reseta o cronômetro do jogo e do tempo de posse
-        function resetarTudo() {
-            clearInterval(intervaloJogo);
-            clearInterval(intervaloTempoPosse);
+        function resetAll() {
+            clearInterval(gameInterval);
+            clearInterval(shotClockInterval);
             
             // Reset placar e faltas
-            placarBranco = 0;
-            placarAzul = 0;
-            faltasBranco = 0;
-            faltasAzul = 0;
+            whiteScore = 0;
+            blueScore = 0;
+            whiteFouls = 0;
+            blueFouls = 0;
             
-            elementoPlacarBranco.textContent = "0";
-            elementoPlacarAzul.textContent = "0";
-            elementoFaltasBranco.textContent = "0";
-            elementoFaltasAzul.textContent = "0";
+            whiteScoreElement.textContent = "0";
+            blueScoreElement.textContent = "0";
+            whiteFoulsElement.textContent = "0";
+            blueFoulsElement.textContent = "0";
             
             // Reset timers
-            periodoAtual = 1;
-            tempoJogo = TEMPO_POR_PERIODO;
-            tempoPosse = 24;
-            atualizarTempoJogo();
-            atualizarTempoPosse();
-            atualizarPeriodo();
+            currentPeriod = 1;
+            gameTime = PERIOD_TIME;
+            shotClockTime = 24;
+            updateGameTimeDisplay();
+            updateShotClockDisplay();
+            updatePeriodDisplay();
             
-            jogoRodando = false;
-            tempoPosseRodando = false;
-            botaoIniciarPausar.textContent = "Iniciar Jogo";
+            isGameRunning = false;
+            isShotClockRunning = false;
+            startPauseButton.textContent = "Iniciar Jogo";
             
             // Reset piscar
-            elementoFaltasBranco.classList.remove('blinking');
-            elementoFaltasAzul.classList.remove('blinking');
+            whiteFoulsElement.classList.remove('blinking');
+            blueFoulsElement.classList.remove('blinking');
             
-            falar("Placar resetado");
+            speak("Placar resetado");
         }
 
         // Reseta o tempo de posse para valores específicos
-        function resetarTempoPosse24() {
-            clearInterval(intervaloTempoPosse);
-            tempoPosse = 24;
-            atualizarTempoPosse();
-            iniciarTempoPosse(true);
+        function resetShotClock24() {
+            clearInterval(shotClockInterval);
+            shotClockTime = 24;
+            updateShotClockDisplay();
+            startShotClock(true);
         }
 
-        function resetarTempoPosse14() {
-            clearInterval(intervaloTempoPosse);
-            tempoPosse = 14;
-            atualizarTempoPosse();
-            iniciarTempoPosse(true);
+        function resetShotClock14() {
+            clearInterval(shotClockInterval);
+            shotClockTime = 14;
+            updateShotClockDisplay();
+            startShotClock(true);
         }
 
-        function resetarTempoPosse12() {
-            clearInterval(intervaloTempoPosse);
-            tempoPosse = 12;
-            atualizarTempoPosse();
-            iniciarTempoPosse(true);
+        function resetShotClock12() {
+            clearInterval(shotClockInterval);
+            shotClockTime = 12;
+            updateShotClockDisplay();
+            startShotClock(true);
         }
 
         // Pedido de tempo
-        function pedirTempo() {
-            tocarBuzina();
+        function requestTimeout() {
+            playHorn();
             setTimeout(() => {
-                falar("Pedido de tempo");
+                speak("Pedido de tempo");
             }, 999);
         }
 
         // Alternar tela cheia
-        function alternarTelaCheia() {
-            if (!telaCheia) {
+        function toggleFullscreen() {
+            if (!isFullscreen) {
                 document.documentElement.requestFullscreen().catch(err => {
                     console.log(`Erro ao tentar entrar em tela cheia: ${err.message}`);
                 });
-                botaoTelaCheia.textContent = "SAIR TELA CHEIA";
-                telaCheia = true;
+                fullscreenButton.textContent = "SAIR TELA CHEIA";
+                isFullscreen = true;
             } else {
                 document.exitFullscreen();
-                botaoTelaCheia.textContent = "TELA CHEIA";
-                telaCheia = false;
+                fullscreenButton.textContent = "TELA CHEIA";
+                isFullscreen = false;
             }
         }
 
         // Alternar menu de configurações
-        function alternarConfigMenu() {
-            configMenuAberto = !configMenuAberto;
-            if (configMenuAberto) {
+        function toggleConfigMenu() {
+            isConfigMenuOpen = !isConfigMenuOpen;
+            if (isConfigMenuOpen) {
                 configMenu.classList.add('open');
-                botaoConfig.textContent = "FECHAR";
+                configButton.textContent = "FECHAR";
             } else {
                 configMenu.classList.remove('open');
-                botaoConfig.textContent = "CONFIG";
+                configButton.textContent = "CONFIG";
             }
         }
 
-        // Event Listeners
-        document.getElementById('white-team').addEventListener('click', () => {
-            ajustarPlacar('white', -1, true);
-        });
-
-        document.getElementById('blue-team').addEventListener('click', () => {
-            ajustarPlacar('blue', -1, true);
-        });
-
-        document.getElementById('white-foul').addEventListener('click', () => {
-            ajustarFaltas('white', -1, true);
-        });
-
-        document.getElementById('blue-foul').addEventListener('click', () => {
-            ajustarFaltas('blue', -1, true);
-        });
-
-        document.getElementById('game-time-increase').addEventListener('click', () => {
-            tempoJogo += 10;
-            atualizarTempoJogo();
-        });
-
-        document.getElementById('game-time-decrease').addEventListener('click', () => {
-            tempoJogo = Math.max(0, tempoJogo - 10);
-            atualizarTempoJogo();
-        });
-
-        document.getElementById('shot-clock-increase').addEventListener('click', () => {
-            tempoPosse = Math.min(99, tempoPosse + 1);
-            atualizarTempoPosse();
-        });
-
-        document.getElementById('shot-clock-decrease').addEventListener('click', () => {
-            tempoPosse = Math.max(0, tempoPosse - 1);
-            atualizarTempoPosse();
-        });
-
-        document.getElementById('reset-24').addEventListener('click', resetarTempoPosse24);
-        document.getElementById('reset-14').addEventListener('click', resetarTempoPosse14);
-        document.getElementById('reset-12').addEventListener('click', resetarTempoPosse12);
-
-        botaoPedirTempo.addEventListener('click', pedirTempo);
-        botaoBuzina.addEventListener('click', tocarBuzina);
-        botaoTelaCheia.addEventListener('click', alternarTelaCheia);
-        botaoConfig.addEventListener('click', alternarConfigMenu);
-        botaoSalvarNomes.addEventListener('click', salvarConfiguracoes);
-        botaoResetarTudo.addEventListener('click', resetarTudo);
-        botaoIniciarPausar.addEventListener('click', alternarTempoJogo);
-        botaoAumentarPeriodo.addEventListener('click', avancarPeriodo);
-        botaoDiminuirPeriodo.addEventListener('click', voltarPeriodo);
-        seletorVoz.addEventListener('change', () => {
-            const indiceSelecionado = seletorVoz.value;
-            vozSelecionada = vozes[indiceSelecionado];
-            localStorage.setItem('vozSelecionada', indiceSelecionado);
-        });
+        // Configura os atalhos do teclado
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', (event) => {
+                // Verifica se o evento veio de um input para não interferir com digitação
+                if (event.target.tagName === 'INPUT') return;
+                
+                // Verifica se é um teclado numérico (Numpad) ou teclado normal
+                const isNumpad = event.code.includes('Numpad');
+                const isNumberRow = !isNumpad && !isNaN(event.key);
+                
+                switch(event.key) {
+                    case '4':
+                    case 'Numpad4': // Time Branco +1
+                        adjustScore('white', 1);
+                        break;
+                    case '6':
+                    case 'Numpad6': // Time Azul +1
+                        adjustScore('blue', 1);
+                        break;
+                    case '1':
+                    case 'Numpad1': // Faltas Time Branco +1
+                        adjustFouls('white', 1);
+                        break;
+                    case '3':
+                    case 'Numpad3': // Faltas Time Azul +1
+                        adjustFouls('blue', 1);
+                        break;
+                    case '+':
+                    case 'NumpadAdd': // Iniciar/Pausar jogo
+                        toggleGameTimer();
+                        break;
+                    case '-':
+                    case 'NumpadSubtract': // Diminuir período
+                        previousPeriod();
+                        break;
+                    case '7':
+                    case 'Numpad7': // Resetar 24s
+                        resetShotClock24();
+                        break;
+                    case '8':
+                    case 'Numpad8': // Resetar 14s
+                        resetShotClock14();
+                        break;
+                    case '9':
+                    case 'Numpad9': // Resetar 12s
+                        resetShotClock12();
+                        break;
+                    case '0':
+                    case 'Numpad0': // Buzina
+                        playHorn();
+                        break;
+                    case 'Enter': // Pedido de tempo (tecla Enter)
+                        requestTimeout();
+                        break;
+                    case ' ': // Espaço para iniciar/pausar
+                        toggleGameTimer();
+                        break;
+                }
+            });
+        }
 
         // Inicialização
         document.addEventListener('DOMContentLoaded', () => {
-            carregarVozes();
-            carregarConfiguracoes();
-            atualizarTempoJogo();
-            atualizarTempoPosse();
-            atualizarPeriodo();
+            loadVoices();
+            loadSettings();
+            updateGameTimeDisplay();
+            updateShotClockDisplay();
+            updatePeriodDisplay();
+            setupKeyboardShortcuts();
+            
+            // Configura os event listeners
+            whiteTeamNameElement.addEventListener('click', () => adjustScore('white', -1, true));
+            blueTeamNameElement.addEventListener('click', () => adjustScore('blue', -1, true));
+            whiteFoulsElement.addEventListener('click', () => adjustFouls('white', -1, true));
+            blueFoulsElement.addEventListener('click', () => adjustFouls('blue', -1, true));
+            
+            document.getElementById('game-time-increase').addEventListener('click', () => {
+                gameTime += 10;
+                updateGameTimeDisplay();
+            });
+            
+            document.getElementById('game-time-decrease').addEventListener('click', () => {
+                gameTime = Math.max(0, gameTime - 10);
+                updateGameTimeDisplay();
+            });
+            
+            document.getElementById('shot-clock-increase').addEventListener('click', () => {
+                shotClockTime = Math.min(99, shotClockTime + 1);
+                updateShotClockDisplay();
+            });
+            
+            document.getElementById('shot-clock-decrease').addEventListener('click', () => {
+                shotClockTime = Math.max(0, shotClockTime - 1);
+                updateShotClockDisplay();
+            });
+            
+            document.getElementById('reset-24').addEventListener('click', resetShotClock24);
+            document.getElementById('reset-14').addEventListener('click', resetShotClock14);
+            document.getElementById('reset-12').addEventListener('click', resetShotClock12);
+            
+            timeoutButton.addEventListener('click', requestTimeout);
+            hornButton.addEventListener('click', playHorn);
+            fullscreenButton.addEventListener('click', toggleFullscreen);
+            configButton.addEventListener('click', toggleConfigMenu);
+            saveNamesButton.addEventListener('click', saveSettings);
+            resetAllButton.addEventListener('click', resetAll);
+            startPauseButton.addEventListener('click', toggleGameTimer);
+            increasePeriodButton.addEventListener('click', nextPeriod);
+            decreasePeriodButton.addEventListener('click', previousPeriod);
+            
+            voiceSelect.addEventListener('change', () => {
+                const selectedIndex = voiceSelect.value;
+                selectedVoice = voices[selectedIndex];
+                localStorage.setItem('selectedVoice', selectedIndex);
+            });
         });
     </script>
 </body>
