@@ -57,9 +57,10 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            border-radius: 10px;
+            border-radius: 10px 10px 0 0;
             padding: 10px;
             min-height: 120px;
+            position: relative;
         }
 
         .team-white {
@@ -94,6 +95,13 @@
             word-break: break-word;
         }
 
+        .team-score-container {
+            position: relative;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
         .team-score {
             font-size: 2.5rem;
             font-weight: bold;
@@ -104,6 +112,21 @@
         .score-updated {
             transform: scale(1.1);
             color: var(--cor-destaque);
+        }
+
+        .score-box {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            cursor: pointer;
+            opacity: 0.3;
+            border-radius: 5px;
+        }
+
+        .score-box:hover {
+            background-color: rgba(0,0,0,0.1);
         }
 
         /* Team Controls */
@@ -156,20 +179,41 @@
         }
 
         /* Foul Display */
-        .foul-display {
+        .team-with-fouls {
             display: flex;
-            justify-content: space-between;
-            gap: 10px;
-            margin: 5px 0;
+            flex-direction: column;
+            flex: 1;
         }
 
         .foul-box {
             flex: 1;
             padding: 10px;
-            border-radius: 8px;
+            border-radius: 0 0 8px 8px;
             text-align: center;
             font-weight: bold;
             font-size: 1.2rem;
+            position: relative;
+            margin-top: 5px;
+            z-index: 1;
+        }
+
+        .foul-box:hover {
+            opacity: 0.9;
+        }
+
+        .foul-box-click {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            cursor: pointer;
+            opacity: 0.3;
+            border-radius: 5px;
+        }
+
+        .foul-box-click:hover {
+            background-color: rgba(0,0,0,0.1);
         }
 
         .foul-white {
@@ -310,18 +354,14 @@
         .config-menu {
             background-color: var(--cor-botao);
             border-radius: 10px;
-            padding: 15px;
+            padding: 0;
             margin-top: 10px;
-            display: none;
-            flex-direction: column;
-            gap: 15px;
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.3s ease-out, padding 0.3s ease-out;
         }
 
         .config-menu.open {
-            display: flex;
             max-height: 500px;
             padding: 15px;
         }
@@ -368,6 +408,63 @@
             min-width: calc(50% - 5px);
         }
 
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 10px 0;
+        }
+
+        .toggle-label {
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--cor-destaque);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
         /* Blinking effect for fouls */
         @keyframes blink {
             0% { opacity: 1; }
@@ -404,58 +501,42 @@
                 height: 40px;
             }
         }
-
-        /* Landscape orientation */
-        @media (orientation: landscape) and (max-height: 500px) {
-            #app {
-                max-width: 100%;
-                padding: 5px;
-            }
-            
-            .scoreboard {
-                flex-direction: column;
-            }
-            
-            .team-controls {
-                flex-direction: column;
-            }
-            
-            .control-row {
-                flex-wrap: wrap;
-            }
-            
-            .btn {
-                min-width: 60px;
-            }
-
-            .logo-container {
-                height: 40px;
-                width: 40px;
-                margin: 5px 0;
-            }
-
-            .logo {
-                height: 35px;
-            }
-        }
     </style>
 </head>
 <body>
     <div id="app">
         <!-- Scoreboard -->
         <div class="scoreboard">
-            <div class="team team-white" id="white-team">
-                <div class="team-name" id="white-team-name-display">Branco</div>
-                <div class="team-score" id="white-score">0</div>
+            <div class="team-with-fouls">
+                <div class="team team-white" id="white-team">
+                    <div class="team-name" id="white-team-name-display">Branco</div>
+                    <div class="team-score-container">
+                        <div class="team-score" id="white-score">0</div>
+                        <div class="score-box" id="white-score-box"></div>
+                    </div>
+                </div>
+                <div class="foul-box foul-white" id="white-foul">
+                    <div>0</div>
+                    <div class="foul-box-click" id="white-foul-click"></div>
+                </div>
             </div>
             
             <div class="logo-container">
                 <img src="basquete.gif" alt="Basquete" class="logo">
             </div>
             
-            <div class="team team-blue" id="blue-team">
-                <div class="team-name" id="blue-team-name-display">Azul</div>
-                <div class="team-score" id="blue-score">0</div>
+            <div class="team-with-fouls">
+                <div class="team team-blue" id="blue-team">
+                    <div class="team-name" id="blue-team-name-display">Azul</div>
+                    <div class="team-score-container">
+                        <div class="team-score" id="blue-score">0</div>
+                        <div class="score-box" id="blue-score-box"></div>
+                    </div>
+                </div>
+                <div class="foul-box foul-blue" id="blue-foul">
+                    <div>0</div>
+                    <div class="foul-box-click" id="blue-foul-click"></div>
+                </div>
             </div>
         </div>
 
@@ -484,12 +565,6 @@
             </div>
         </div>
 
-        <!-- Foul Display -->
-        <div class="foul-display">
-            <div class="foul-box foul-white" id="white-foul">0</div>
-            <div class="foul-box foul-blue" id="blue-foul">0</div>
-        </div>
-
         <!-- Period Display -->
         <div class="period-display">
             <button class="btn" id="decrease-period">-</button>
@@ -514,7 +589,7 @@
         </div>
 
         <!-- Shot Clock -->
-        <div class="timer-container">
+        <div class="timer-container" id="shot-clock-container">
             <div class="timer-box">
                 <button class="btn" id="shot-clock-decrease">-</button>
                 <div>
@@ -561,6 +636,14 @@
                 <select id="voice-select"></select>
             </div>
             
+            <div class="toggle-container">
+                <span class="toggle-label">Cronômetro de Posse:</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="shot-clock-toggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            
             <div class="input-group">
                 <label>Tempo de Jogo:</label>
                 <div class="time-options">
@@ -592,10 +675,9 @@
         let whiteTeamName = "Branco";
         let blueTeamName = "Azul";
         let currentPeriod = 1;
-        let whiteFoulBlinkInterval;
-        let blueFoulBlinkInterval;
         let voices = [];
         let selectedVoice = null;
+        let isShotClockEnabled = true;
         
         // Timers
         let gameInterval;
@@ -618,23 +700,12 @@
         const gameTimeDisplay = document.getElementById('game-time-display');
         const shotClockDisplay = document.getElementById('shot-clock-display');
         const periodDisplay = document.getElementById('period-display');
-        const startPauseButton = document.getElementById('start-pause-game');
-        const timeoutButton = document.getElementById('time-request');
-        const hornButton = document.getElementById('horn-button');
-        const fullscreenButton = document.getElementById('fullscreen-button');
-        const configButton = document.getElementById('config-button');
-        const whiteTeamNameInput = document.getElementById('white-team-name');
-        const blueTeamNameInput = document.getElementById('blue-team-name');
-        const saveNamesButton = document.getElementById('save-names');
-        const resetAllButton = document.getElementById('reset-all');
-        const voiceSelect = document.getElementById('voice-select');
-        const increasePeriodButton = document.getElementById('increase-period');
-        const decreasePeriodButton = document.getElementById('decrease-period');
         const configMenu = document.getElementById('config-menu');
 
         // Carrega as vozes disponíveis
         function loadVoices() {
             voices = window.speechSynthesis.getVoices();
+            const voiceSelect = document.getElementById('voice-select');
             voiceSelect.innerHTML = '';
 
             voices.forEach((voice, index) => {
@@ -679,21 +750,27 @@
 
         // Salva as configurações
         function saveSettings() {
-            whiteTeamName = whiteTeamNameInput.value.trim() || "Branco";
-            blueTeamName = blueTeamNameInput.value.trim() || "Azul";
+            whiteTeamName = document.getElementById('white-team-name').value.trim() || "Branco";
+            blueTeamName = document.getElementById('blue-team-name').value.trim() || "Azul";
+            isShotClockEnabled = document.getElementById('shot-clock-toggle').checked;
             
             whiteTeamNameElement.textContent = whiteTeamName;
             blueTeamNameElement.textContent = blueTeamName;
             
-            const selectedIndex = voiceSelect.value;
+            const selectedIndex = document.getElementById('voice-select').value;
             selectedVoice = voices[selectedIndex];
+            
+            // Atualiza visibilidade do cronômetro de posse
+            document.getElementById('shot-clock-container').style.display = isShotClockEnabled ? 'flex' : 'none';
             
             // Salva no localStorage
             localStorage.setItem('whiteTeamName', whiteTeamName);
             localStorage.setItem('blueTeamName', blueTeamName);
             localStorage.setItem('selectedVoice', selectedIndex);
+            localStorage.setItem('isShotClockEnabled', isShotClockEnabled);
             
             speak("Configurações salvas");
+            toggleConfigMenu();
         }
 
         // Carrega configurações salvas
@@ -701,22 +778,29 @@
             const savedWhiteTeam = localStorage.getItem('whiteTeamName');
             const savedBlueTeam = localStorage.getItem('blueTeamName');
             const savedVoice = localStorage.getItem('selectedVoice');
+            const savedShotClockEnabled = localStorage.getItem('isShotClockEnabled');
             
             if (savedWhiteTeam) {
                 whiteTeamName = savedWhiteTeam;
-                whiteTeamNameInput.value = savedWhiteTeam;
+                document.getElementById('white-team-name').value = savedWhiteTeam;
                 whiteTeamNameElement.textContent = savedWhiteTeam;
             }
             
             if (savedBlueTeam) {
                 blueTeamName = savedBlueTeam;
-                blueTeamNameInput.value = savedBlueTeam;
+                document.getElementById('blue-team-name').value = savedBlueTeam;
                 blueTeamNameElement.textContent = savedBlueTeam;
             }
             
             if (savedVoice && voices[savedVoice]) {
-                voiceSelect.value = savedVoice;
+                document.getElementById('voice-select').value = savedVoice;
                 selectedVoice = voices[savedVoice];
+            }
+            
+            if (savedShotClockEnabled !== null) {
+                isShotClockEnabled = savedShotClockEnabled === 'true';
+                document.getElementById('shot-clock-toggle').checked = isShotClockEnabled;
+                document.getElementById('shot-clock-container').style.display = isShotClockEnabled ? 'flex' : 'none';
             }
         }
 
@@ -762,25 +846,25 @@
             if (team === 'white') {
                 whiteFouls = Math.max(0, whiteFouls + fouls);
                 totalFouls = whiteFouls;
-                foulElement = whiteFoulsElement;
+                foulElement = whiteFoulsElement.firstElementChild;
                 foulElement.textContent = totalFouls;
                 teamName = whiteTeamName;
             } else {
                 blueFouls = Math.max(0, blueFouls + fouls);
                 totalFouls = blueFouls;
-                foulElement = blueFoulsElement;
+                foulElement = blueFoulsElement.firstElementChild;
                 foulElement.textContent = totalFouls;
                 teamName = blueTeamName;
             }
 
             // Remove classe blinking se tiver menos que 5 faltas
             if (totalFouls < 5) {
-                foulElement.classList.remove('blinking');
+                foulElement.parentElement.classList.remove('blinking');
             }
 
             // Adiciona classe blinking se tiver 5 faltas
             if (totalFouls >= 5) {
-                foulElement.classList.add('blinking');
+                foulElement.parentElement.classList.add('blinking');
             }
 
             if (!silent) {
@@ -801,7 +885,8 @@
 
         // Atualiza a exibição do cronômetro do jogo
         function updateGameTimeDisplay() {
-            gameTimeDisplay.textContent = formatTime(gameTime);
+            const timeString = formatTime(gameTime);
+            gameTimeDisplay.textContent = timeString;
         }
 
         // Atualiza a exibição do cronômetro do tempo de posse
@@ -816,7 +901,7 @@
             speak(`Tempo de jogo definido para ${minutes} minutos`);
         }
 
-        // Anuncia o tempo de posse (sem anunciar o zero)
+        // Anuncia o tempo de posse
         function announceShotClock() {
             if (shotClockTime === 0) {
                 lastAnnouncedShotTime = 0;
@@ -881,7 +966,7 @@
             if (isGameRunning) return;
             
             isGameRunning = true;
-            startPauseButton.textContent = "Pausar Jogo";
+            document.getElementById('start-pause-game').textContent = "Pausar Jogo";
             
             gameInterval = setInterval(() => {
                 gameTime--;
@@ -892,7 +977,7 @@
                     clearInterval(shotClockInterval);
                     isGameRunning = false;
                     isShotClockRunning = false;
-                    startPauseButton.textContent = "Iniciar Jogo";
+                    document.getElementById('start-pause-game').textContent = "Iniciar Jogo";
                     playHorn();
                     setTimeout(nextPeriod, 2000);
                 }
@@ -901,6 +986,7 @@
 
         // Inicia ou continua o tempo de posse
         function startShotClock(reset = false) {
+            if (!isShotClockEnabled) return;
             if (isShotClockRunning && !reset) return;
             
             isShotClockRunning = true;
@@ -926,7 +1012,7 @@
                 clearInterval(shotClockInterval);
                 isGameRunning = false;
                 isShotClockRunning = false;
-                startPauseButton.textContent = "Iniciar Jogo";
+                document.getElementById('start-pause-game').textContent = "Iniciar Jogo";
             } else {
                 startGameTimer();
                 startShotClock();
@@ -946,8 +1032,8 @@
             
             whiteScoreElement.textContent = "0";
             blueScoreElement.textContent = "0";
-            whiteFoulsElement.textContent = "0";
-            blueFoulsElement.textContent = "0";
+            whiteFoulsElement.firstElementChild.textContent = "0";
+            blueFoulsElement.firstElementChild.textContent = "0";
             
             // Reset timers
             currentPeriod = 1;
@@ -959,7 +1045,7 @@
             
             isGameRunning = false;
             isShotClockRunning = false;
-            startPauseButton.textContent = "Iniciar Jogo";
+            document.getElementById('start-pause-game').textContent = "Iniciar Jogo";
             
             // Reset piscar
             whiteFoulsElement.classList.remove('blinking');
@@ -970,6 +1056,8 @@
 
         // Reseta o tempo de posse para valores específicos
         function resetShotClock24() {
+            if (!isShotClockEnabled) return;
+            
             clearInterval(shotClockInterval);
             shotClockTime = 24;
             updateShotClockDisplay();
@@ -977,6 +1065,8 @@
         }
 
         function resetShotClock14() {
+            if (!isShotClockEnabled) return;
+            
             clearInterval(shotClockInterval);
             shotClockTime = 14;
             updateShotClockDisplay();
@@ -984,6 +1074,8 @@
         }
 
         function resetShotClock12() {
+            if (!isShotClockEnabled) return;
+            
             clearInterval(shotClockInterval);
             shotClockTime = 12;
             updateShotClockDisplay();
@@ -1004,11 +1096,11 @@
                 document.documentElement.requestFullscreen().catch(err => {
                     console.log(`Erro ao tentar entrar em tela cheia: ${err.message}`);
                 });
-                fullscreenButton.textContent = "SAIR TELA CHEIA";
+                document.getElementById('fullscreen-button').textContent = "SAIR TELA CHEIA";
                 isFullscreen = true;
             } else {
                 document.exitFullscreen();
-                fullscreenButton.textContent = "TELA CHEIA";
+                document.getElementById('fullscreen-button').textContent = "TELA CHEIA";
                 isFullscreen = false;
             }
         }
@@ -1018,68 +1110,66 @@
             isConfigMenuOpen = !isConfigMenuOpen;
             if (isConfigMenuOpen) {
                 configMenu.classList.add('open');
-                configButton.textContent = "FECHAR";
+                document.getElementById('config-button').textContent = "FECHAR";
             } else {
                 configMenu.classList.remove('open');
-                configButton.textContent = "CONFIG";
+                document.getElementById('config-button').textContent = "CONFIG";
             }
         }
 
         // Configura os atalhos do teclado
         function setupKeyboardShortcuts() {
             document.addEventListener('keydown', (event) => {
-                // Verifica se o evento veio de um input para não interferir com digitação
                 if (event.target.tagName === 'INPUT') return;
                 
-                // Verifica se é um teclado numérico (Numpad) ou teclado normal
                 const isNumpad = event.code.includes('Numpad');
                 const isNumberRow = !isNumpad && !isNaN(event.key);
                 
                 switch(event.key) {
                     case '4':
-                    case 'Numpad4': // Time Branco +1
+                    case 'Numpad4':
                         adjustScore('white', 1);
                         break;
                     case '6':
-                    case 'Numpad6': // Time Azul +1
+                    case 'Numpad6':
                         adjustScore('blue', 1);
                         break;
                     case '1':
-                    case 'Numpad1': // Faltas Time Branco +1
+                    case 'Numpad1':
                         adjustFouls('white', 1);
                         break;
                     case '3':
-                    case 'Numpad3': // Faltas Time Azul +1
+                    case 'Numpad3':
                         adjustFouls('blue', 1);
                         break;
                     case '+':
-                    case 'NumpadAdd': // Iniciar/Pausar jogo
+                    case 'NumpadAdd':
                         toggleGameTimer();
                         break;
                     case '-':
-                    case 'NumpadSubtract': // Diminuir período
+                    case 'NumpadSubtract':
                         previousPeriod();
                         break;
                     case '7':
-                    case 'Numpad7': // Resetar 24s
+                    case 'Numpad7':
                         resetShotClock24();
                         break;
                     case '8':
-                    case 'Numpad8': // Resetar 14s
+                    case 'Numpad8':
                         resetShotClock14();
                         break;
                     case '9':
-                    case 'Numpad9': // Resetar 12s
+                    case 'Numpad9':
                         resetShotClock12();
                         break;
                     case '0':
-                    case 'Numpad0': // Buzina
+                    case 'Numpad0':
                         playHorn();
                         break;
-                    case 'Enter': // Pedido de tempo (tecla Enter)
+                    case 'Enter':
                         requestTimeout();
                         break;
-                    case ' ': // Espaço para iniciar/pausar
+                    case ' ':
                         toggleGameTimer();
                         break;
                 }
@@ -1096,10 +1186,10 @@
             setupKeyboardShortcuts();
             
             // Configura os event listeners
-            whiteTeamNameElement.addEventListener('click', () => adjustScore('white', -1, true));
-            blueTeamNameElement.addEventListener('click', () => adjustScore('blue', -1, true));
-            whiteFoulsElement.addEventListener('click', () => adjustFouls('white', -1, true));
-            blueFoulsElement.addEventListener('click', () => adjustFouls('blue', -1, true));
+            document.getElementById('white-score-box').addEventListener('click', () => adjustScore('white', -1, true));
+            document.getElementById('blue-score-box').addEventListener('click', () => adjustScore('blue', -1, true));
+            document.getElementById('white-foul-click').addEventListener('click', () => adjustFouls('white', -1, true));
+            document.getElementById('blue-foul-click').addEventListener('click', () => adjustFouls('blue', -1, true));
             
             document.getElementById('game-time-increase').addEventListener('click', () => {
                 gameTime += 10;
@@ -1125,20 +1215,30 @@
             document.getElementById('reset-14').addEventListener('click', resetShotClock14);
             document.getElementById('reset-12').addEventListener('click', resetShotClock12);
             
-            timeoutButton.addEventListener('click', requestTimeout);
-            hornButton.addEventListener('click', playHorn);
-            fullscreenButton.addEventListener('click', toggleFullscreen);
-            configButton.addEventListener('click', toggleConfigMenu);
-            saveNamesButton.addEventListener('click', saveSettings);
-            resetAllButton.addEventListener('click', resetAll);
-            startPauseButton.addEventListener('click', toggleGameTimer);
-            increasePeriodButton.addEventListener('click', nextPeriod);
-            decreasePeriodButton.addEventListener('click', previousPeriod);
+            document.getElementById('time-request').addEventListener('click', requestTimeout);
+            document.getElementById('horn-button').addEventListener('click', playHorn);
+            document.getElementById('fullscreen-button').addEventListener('click', toggleFullscreen);
+            document.getElementById('config-button').addEventListener('click', toggleConfigMenu);
+            document.getElementById('save-names').addEventListener('click', saveSettings);
+            document.getElementById('reset-all').addEventListener('click', resetAll);
+            document.getElementById('start-pause-game').addEventListener('click', toggleGameTimer);
+            document.getElementById('increase-period').addEventListener('click', nextPeriod);
+            document.getElementById('decrease-period').addEventListener('click', previousPeriod);
             
-            voiceSelect.addEventListener('change', () => {
-                const selectedIndex = voiceSelect.value;
+            document.getElementById('voice-select').addEventListener('change', () => {
+                const selectedIndex = document.getElementById('voice-select').value;
                 selectedVoice = voices[selectedIndex];
                 localStorage.setItem('selectedVoice', selectedIndex);
+            });
+
+            document.getElementById('shot-clock-toggle').addEventListener('change', () => {
+                isShotClockEnabled = document.getElementById('shot-clock-toggle').checked;
+                document.getElementById('shot-clock-container').style.display = isShotClockEnabled ? 'flex' : 'none';
+                
+                if (!isShotClockEnabled) {
+                    clearInterval(shotClockInterval);
+                    isShotClockRunning = false;
+                }
             });
         });
     </script>
