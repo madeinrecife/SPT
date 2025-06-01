@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#121212">
+    <meta name="description" content="Controle do Placar de Basquete">
+    <title>Controle Placar Basquete</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        :root {
+            --cor-branco: #ffffff;
+            --cor-azul: #1a73e8;
+            --cor-fundo: #121212;
+            --cor-texto: #e0e0e0;
+            --cor-destaque: #4CAF50;
+            --cor-alerta: #f44336;
+            --cor-botao: #333333;
+            --cor-botao-hover: #454545;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto);
+            min-height: 100vh;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* Scoreboard Preview */
+        .scoreboard-preview {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 5px;
+            width: 100%;
+            border: 2px solid #333;
+            border-radius: 10px;
+            padding: 5px;
+            background-color: #222;
+        }
+
+        .preview-team {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 5px;
+        }
+
+        .preview-team-white {
+            background-color: var(--cor-branco);
+            color: #000;
+            border-radius: 5px;
+        }
+
+        .preview-team-blue {
+            background-color: var(--cor-azul);
+            color: var(--cor-branco);
+            border-radius: 5px;
+        }
+
+        .preview-team-name {
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .preview-team-score {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .preview-foul {
+            font-size: 0.9rem;
+            margin-top: 3px;
+        }
+
+        /* Team Controls */
+        .team-controls {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .control-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 5px;
+            font-size: 0.9rem;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--cor-botao);
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            user-select: none;
+        }
+
+        .btn:hover, .btn:active {
+            background-color: var(--cor-botao-hover);
+        }
+
+        .btn-point {
+            font-weight: bold;
+        }
+
+        .btn-foul {
+            background-color: #d32f2f;
+        }
+
+        .btn-foul:hover {
+            background-color: #f44336;
+        }
+
+        /* Period Display */
+        .period-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin: 10px 0;
+        }
+
+        .period-text {
+            font-size: 1.2rem;
+            font-weight: bold;
+            min-width: 100px;
+            text-align: center;
+        }
+
+        /* Timers */
+        .timer-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .timer-box {
+            background-color: var(--cor-botao);
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .timer-display {
+            font-size: 1.8rem;
+            font-weight: bold;
+            font-family: 'Roboto Mono', monospace;
+            text-align: center;
+            flex: 1;
+        }
+
+        .timer-label {
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 5px;
+        }
+
+        .timer-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .btn-timer {
+            padding: 10px 15px;
+        }
+
+        .btn-start {
+            background-color: var(--cor-destaque);
+        }
+
+        .btn-start:hover {
+            background-color: #45a049;
+        }
+
+        .btn-reset {
+            background-color: #ff9800;
+        }
+
+        .btn-reset:hover {
+            background-color: #fb8c00;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .action-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 12px;
+            font-weight: bold;
+        }
+
+        .btn-timeout {
+            background-color: #2196F3;
+        }
+
+        .btn-timeout:hover {
+            background-color: #0b7dda;
+        }
+
+        .btn-horn {
+            background-color: var(--cor-alerta);
+        }
+
+        .btn-horn:hover {
+            background-color: #e53935;
+        }
+
+        .btn-fullscreen {
+            background-color: #9c27b0;
+        }
+
+        .btn-fullscreen:hover {
+            background-color: #7b1fa2;
+        }
+
+        .btn-config {
+            background-color: #607d8b;
+        }
+
+        .btn-config:hover {
+            background-color: #455a64;
+        }
+
+        /* Config Menu */
+        .config-menu {
+            background-color: var(--cor-botao);
+            border-radius: 10px;
+            padding: 0;
+            margin-top: 10px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+        }
+
+        .config-menu.open {
+            max-height: 500px;
+            padding: 15px;
+        }
+
+        .team-inputs {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .input-group label {
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .input-group input, .input-group select {
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            background-color: #454545;
+            color: white;
+        }
+
+        .config-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .time-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: space-between;
+        }
+
+        .time-option {
+            flex: 1;
+            min-width: calc(50% - 5px);
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 10px 0;
+        }
+
+        .toggle-label {
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--cor-destaque);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Scoreboard URL */
+        .scoreboard-url {
+            margin-top: 15px;
+            width: 100%;
+        }
+
+        .scoreboard-url input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            background-color: #454545;
+            color: white;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.8rem;
+        }
+
+        /* Install Button */
+        #installButton {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+            z-index: 1000;
+        }
+
+        /* Media Queries for very small devices */
+        @media (max-width: 350px) {
+            .preview-team-score {
+                font-size: 1.2rem;
+            }
+            
+            .btn {
+                padding: 10px 3px;
+                font-size: 0.8rem;
+            }
+            
+            .timer-display {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Scoreboard Preview -->
+        <div class="scoreboard-preview">
+            <div class="preview-team preview-team-white">
+                <div class="preview-team-name" id="preview-white-name">Branco</div>
+                <div class="preview-team-score" id="preview-white-score">0</div>
+                <div class="preview-foul" id="preview-white-foul">0</div>
+            </div>
+            
+            <div class="preview-team">
+                <div class="period-text" id="preview-period">1º Período</div>
+            </div>
+            
+            <div class="preview-team preview-team-blue">
+                <div class="preview-team-name" id="preview-blue-name">Azul</div>
+                <div class="preview-team-score" id="preview-blue-score">0</div>
+                <div class="preview-foul" id="preview-blue-foul">0</div>
+            </div>
+        </div>
+
+        <!-- Team Controls -->
+        <div class="team-controls">
+            <div class="control-group">
+                <div class="control-row">
+                    <button class="btn btn-point" onclick="adjustScore('white', 1)">+1</button>
+                    <button class="btn btn-point" onclick="adjustScore('white', 2)">+2</button>
+                </div>
+                <div class="control-row">
+                    <button class="btn btn-point" onclick="adjustScore('white', 3)">+3</button>
+                    <button class="btn btn-foul" onclick="adjustFouls('white', 1)">Falta</button>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <div class="control-row">
+                    <button class="btn btn-point" onclick="adjustScore('blue', 1)">+1</button>
+                    <button class="btn btn-point" onclick="adjustScore('blue', 2)">+2</button>
+                </div>
+                <div class="control-row">
+                    <button class="btn btn-point" onclick="adjustScore('blue', 3)">+3</button>
+                    <button class="btn btn-foul" onclick="adjustFouls('blue', 1)">Falta</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Period Display -->
+        <div class="period-display">
+            <button class="btn" id="decrease-period">-</button>
+            <div class="period-text" id="period-display">1º Período</div>
+            <button class="btn" id="increase-period">+</button>
+        </div>
+
+        <!-- Game Timer -->
+        <div class="timer-container">
+            <div class="timer-box">
+                <button class="btn" id="game-time-decrease">-</button>
+                <div>
+                    <div class="timer-display" id="game-time-display">12:00</div>
+                    <div class="timer-label">TEMPO DE JOGO</div>
+                </div>
+                <button class="btn" id="game-time-increase">+</button>
+            </div>
+            
+            <div class="timer-controls">
+                <button class="btn btn-start" id="start-pause-game">Iniciar Jogo</button>
+            </div>
+        </div>
+
+        <!-- Shot Clock -->
+        <div class="timer-container" id="shot-clock-container">
+            <div class="timer-box">
+                <button class="btn" id="shot-clock-decrease">-</button>
+                <div>
+                    <div class="timer-display" id="shot-clock-display">12</div>
+                    <div class="timer-label">TEMPO DE POSSE</div>
+                </div>
+                <button class="btn" id="shot-clock-increase">+</button>
+            </div>
+            
+            <div class="timer-controls">
+                <button class="btn btn-reset" id="reset-12">12s</button>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <div class="action-row">
+                <button class="btn btn-action btn-timeout" id="time-request">TEMPO</button>
+                <button class="btn btn-action btn-horn" id="horn-button">BUZINA</button>
+            </div>
+            <div class="action-row">
+                <button class="btn btn-action btn-fullscreen" id="fullscreen-button">TELA CHEIA</button>
+                <button class="btn btn-action btn-config" id="config-button">CONFIG</button>
+            </div>
+        </div>
+
+        <!-- Config Menu -->
+        <div class="config-menu" id="config-menu">
+            <div class="team-inputs">
+                <div class="input-group">
+                    <label for="white-team-name">Time Branco:</label>
+                    <input type="text" id="white-team-name" placeholder="Nome do Time" value="Branco">
+                </div>
+                <div class="input-group">
+                    <label for="blue-team-name">Time Azul:</label>
+                    <input type="text" id="blue-team-name" placeholder="Nome do Time" value="Azul">
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label for="voice-select">Voz de Anúncio:</label>
+                <select id="voice-select"></select>
+            </div>
+            
+            <div class="toggle-container">
+                <span class="toggle-label">Cronômetro de Posse:</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="shot-clock-toggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            
+            <div class="input-group">
+                <label>Tempo de Jogo:</label>
+                <div class="time-options">
+                    <button class="btn time-option" onclick="setGameTime(5)">5 Min</button>
+                    <button class="btn time-option" onclick="setGameTime(10)">10 Min</button>
+                    <button class="btn time-option" onclick="setGameTime(12)">12 Min</button>
+                    <button class="btn time-option" onclick="setGameTime(15)">15 Min</button>
+                </div>
+            </div>
+            
+            <div class="input-group scoreboard-url">
+                <label>URL do Scoreboard:</label>
+                <input type="text" id="scoreboard-url" readonly>
+                <button class="btn" onclick="copyScoreboardUrl()">Copiar URL</button>
+            </div>
+            
+            <div class="config-buttons">
+                <button class="btn" id="save-names">Salvar</button>
+                <button class="btn" id="reset-all">Resetar</button>
+            </div>
+        </div>
+    </div>
+
+    <button id="installButton" aria-label="Instalar aplicativo">Instalar App</button>
+
+    <script>
+        // Variáveis Globais
+        const MAX_SCORE = 200;
+        const MAX_PERIODS = 4;
+        const PERIOD_TIME = 12 * 60;
+        const OVERTIME_TIME = 5 * 60;
+        
+        let whiteScore = 0;
+        let blueScore = 0;
+        let whiteFouls = 0;
+        let blueFouls = 0;
+        let whiteTeamName = "Branco";
+        let blueTeamName = "Azul";
+        let currentPeriod = 1;
+        let voices = [];
+        let selectedVoice = null;
+        let isShotClockEnabled = true;
+        let deferredPrompt;
+        let scoreboardUrl = "";
+        
+        // Timers
+        let gameInterval;
+        let shotClockInterval;
+        let gameTime = PERIOD_TIME;
+        let shotClockTime = 12;
+        let isGameRunning = false;
+        let isShotClockRunning = false;
+        let isFullscreen = false;
+        let lastAnnouncedShotTime = 0;
+        let isConfigMenuOpen = false;
+
+        // Elementos HTML
+        const previewWhiteScore = document.getElementById('preview-white-score');
+        const previewBlueScore = document.getElementById('preview-blue-score');
+        const previewWhiteFoul = document.getElementById('preview-white-foul');
+        const previewBlueFoul = document.getElementById('preview-blue-foul');
+        const previewWhiteName = document.getElementById('preview-white-name');
+        const previewBlueName = document.getElementById('preview-blue-name');
+        const previewPeriod = document.getElementById('preview-period');
+        const gameTimeDisplay = document.getElementById('game-time-display');
+        const shotClockDisplay = document.getElementById('shot-clock-display');
+        const periodDisplay = document.getElementById('period-display');
+        const configMenu = document.getElementById('config-menu');
+        const installButton = document.getElementById('installButton');
+        const scoreboardUrlInput = document.getElementById('scoreboard-url');
+
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+
+        // PWA Installation Prompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installButton.style.display = 'block';
+        });
+
+        installButton.addEventListener('click', () => {
+            installButton.style.display = 'none';
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('User accepted install');
+                } else {
+                    console.log('User dismissed install');
+                }
+                deferredPrompt = null;
+            });
+        });
+
+        // Gera um ID único para a sessão
+        function generateSessionId() {
+            return 'session-' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // Atualiza a URL do scoreboard
+        function updateScoreboardUrl() {
+            const sessionId = localStorage.getItem('scoreboardSessionId') || generateSessionId();
+            localStorage.setItem('scoreboardSessionId', sessionId);
+            
+            const baseUrl = window.location.href.replace('index.html', 'scoreboard.html');
+            scoreboardUrl = `${baseUrl}?session=${sessionId}`;
+            scoreboardUrlInput.value = scoreboardUrl;
+        }
+
+        // Copia a URL do scoreboard para a área de transferência
+        function copyScoreboardUrl() {
+            scoreboardUrlInput.select();
+            document.execCommand('copy');
+            speak("URL copiada para a área de transferência");
+        }
+
+        // Salva o estado atual no localStorage
+        function saveState() {
+            const state = {
+                whiteScore,
+                blueScore,
+                whiteFouls,
+                blueFouls,
+                whiteTeamName,
+                blueTeamName,
+                currentPeriod,
+                gameTime,
+                shotClockTime,
+                isGameRunning,
+                isShotClockRunning
+            };
+            
+            const sessionId = localStorage.getItem('scoreboardSessionId');
+            if (sessionId) {
+                localStorage.setItem(`scoreboardState-${sessionId}`, JSON.stringify(state));
+            }
+        }
+
+        // Carrega o estado do localStorage
+        function loadState() {
+            const sessionId = localStorage.getItem('scoreboardSessionId');
+            if (sessionId) {
+                const savedState = localStorage.getItem(`scoreboardState-${sessionId}`);
+                if (savedState) {
+                    const state = JSON.parse(savedState);
+                    
+                    whiteScore = state.whiteScore || 0;
+                    blueScore = state.blueScore || 0;
+                    whiteFouls = state.whiteFouls || 0;
+                    blueFouls = state.blueFouls || 0;
+                    whiteTeamName = state.whiteTeamName || "Branco";
+                    blueTeamName = state.blueTeamName || "Azul";
+                    currentPeriod = state.currentPeriod || 1;
+                    gameTime = state.gameTime || PERIOD_TIME;
+                    shotClockTime = state.shotClockTime || 12;
+                    isGameRunning = state.isGameRunning || false;
+                    isShotClockRunning = state.isShotClockRunning || false;
+                    
+                    updateDisplays();
+                }
+            }
+        }
+
+        // Atualiza todos os displays
+        function updateDisplays() {
+            previewWhiteScore.textContent = whiteScore;
+            previewBlueScore.textContent = blueScore;
+            previewWhiteFoul.textContent = whiteFouls;
+            previewBlueFoul.textContent = blueFouls;
+            previewWhiteName.textContent = whiteTeamName;
+            previewBlueName.textContent = blueTeamName;
+            
+            gameTimeDisplay.textContent = formatTime(gameTime);
+            shotClockDisplay.textContent = shotClockTime;
+            
+            let periodText;
+            if (currentPeriod <= MAX_PERIODS) {
+                periodText = `${currentPeriod}º Período`;
+            } else {
+                const overtimeNumber = currentPeriod - MAX_PERIODS;
+                periodText = `Prorrogação ${overtimeNumber}`;
+            }
+            
+            periodDisplay.textContent = periodText;
+            previewPeriod.textContent = periodText;
+            
+            document.getElementById('start-pause-game').textContent = isGameRunning ? "Pausar Jogo" : "Iniciar Jogo";
+        }
+
+        // Carrega as vozes disponíveis
+        function loadVoices() {
+            voices = window.speechSynthesis.getVoices();
+            const voiceSelect = document.getElementById('voice-select');
+            voiceSelect.innerHTML = '';
+
+            voices.forEach((voice, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `${voice.name} (${voice.lang})`;
+                voiceSelect.appendChild(option);
+            });
+
+            if (voices.length > 0) {
+                selectedVoice = voices[0];
+            }
+        }
+
+        // Configura o seletor de voz
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+
+        // Função para falar texto
+        function speak(text) {
+            if (!window.speechSynthesis) {
+                console.warn("Síntese de voz não disponível");
+                return;
+            }
+            
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.voice = selectedVoice;
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Função para tocar a buzina
+        function playHorn() {
+            try {
+                const hornSound = new Audio('buzina.mp3');
+                hornSound.play().catch(e => console.log("Erro ao tocar buzina:", e));
+            } catch (e) {
+                console.log("Erro ao carregar buzina:", e);
+            }
+        }
+
+        // Salva as configurações
+        function saveSettings() {
+            whiteTeamName = document.getElementById('white-team-name').value.trim() || "Branco";
+            blueTeamName = document.getElementById('blue-team-name').value.trim() || "Azul";
+            isShotClockEnabled = document.getElementById('shot-clock-toggle').checked;
+            
+            previewWhiteName.textContent = whiteTeamName;
+            previewBlueName.textContent = blueTeamName;
+            
+            const selectedIndex = document.getElementById('voice-select').value;
+            selectedVoice = voices[selectedIndex];
+            
+            // Atualiza visibilidade do cronômetro de posse
+            document.getElementById('shot-clock-container').style.display = isShotClockEnabled ? 'flex' : 'none';
+            
+            // Salva no localStorage
+            localStorage.setItem('whiteTeamName', whiteTeamName);
+            localStorage.setItem('blueTeamName', blueTeamName);
+            localStorage.setItem('selectedVoice', selectedIndex);
+            localStorage.setItem('isShotClockEnabled', isShotClockEnabled);
+            
+            speak("Configurações salvas");
+            toggleConfigMenu();
+            saveState();
+        }
+
+        // Carrega configurações salvas
+        function loadSettings() {
+            const savedWhiteTeam = localStorage.getItem('whiteTeamName');
+            const savedBlueTeam = localStorage.getItem('blueTeamName');
+            const savedVoice = localStorage.getItem('selectedVoice');
+            const savedShotClockEnabled = localStorage.getItem('isShotClockEnabled');
+            
+            if (savedWhiteTeam) {
+                whiteTeamName = savedWhiteTeam;
+                document.getElementById('white-team-name').value = savedWhiteTeam;
+                previewWhiteName.textContent = savedWhiteTeam;
+            }
+            
+            if (savedBlueTeam) {
+                blueTeamName = savedBlueTeam;
+                document.getElementById('blue-team-name').value = savedBlueTeam;
+                previewBlueName.textContent = savedBlueTeam;
+            }
+            
+            if (savedVoice && voices[savedVoice]) {
+                document.getElementById('voice-select').value = savedVoice;
+                selectedVoice = voices[savedVoice];
+            }
+            
+            if (savedShotClockEnabled !== null) {
+                isShotClockEnabled = savedShotClockEnabled === 'true';
+                document.getElementById('shot-clock-toggle').checked = isShotClockEnabled;
+                document.getElementById('shot-clock-container').style.display = isShotClockEnabled ? 'flex' : 'none';
+            }
+        }
+
+        // Efeito visual ao atualizar placar
+        function scoreUpdateEffect(element) {
+            element.classList.add('score-updated');
+            setTimeout(() => {
+                element.classList.remove('score-updated');
+            }, 300);
+        }
+
+        // Ajusta o placar dos times
+        function adjustScore(team, points, silent = false) {
+            let currentScore, newScore, teamName, scoreElement;
+            
+            if (team === 'white') {
+                currentScore = whiteScore;
+                newScore = Math.max(0, Math.min(MAX_SCORE, currentScore + points));
+                whiteScore = newScore;
+                scoreElement = previewWhiteScore;
+                teamName = whiteTeamName;
+            } else {
+                currentScore = blueScore;
+                newScore = Math.max(0, Math.min(MAX_SCORE, currentScore + points));
+                blueScore = newScore;
+                scoreElement = previewBlueScore;
+                teamName = blueTeamName;
+            }
+            
+            scoreElement.textContent = newScore;
+            scoreUpdateEffect(scoreElement);
+            saveState();
+            
+            if (!silent) {
+                speak(`${teamName} ${newScore} pontos`);
+            }
+        }
+
+        // Ajusta as faltas coletivas
+        function adjustFouls(team, fouls, silent = false) {
+            let totalFouls, foulElement, teamName;
+            
+            if (team === 'white') {
+                whiteFouls = Math.max(0, whiteFouls + fouls);
+                totalFouls = whiteFouls;
+                foulElement = previewWhiteFoul;
+                teamName = whiteTeamName;
+            } else {
+                blueFouls = Math.max(0, blueFouls + fouls);
+                totalFouls = blueFouls;
+                foulElement = previewBlueFoul;
+                teamName = blueTeamName;
+            }
+
+            foulElement.textContent = totalFouls;
+            saveState();
+
+            if (!silent) {
+                if (totalFouls === 5) {
+                    speak(`${teamName} com faltas estouradas!`);
+                } else {
+                    speak(`${totalFouls} faltas para ${teamName}`);
+                }
+            }
+        }
+
+        // Função para formatar o tempo em minutos e segundos
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        // Atualiza a exibição do cronômetro do jogo
+        function updateGameTimeDisplay() {
+            const timeString = formatTime(gameTime);
+            gameTimeDisplay.textContent = timeString;
+            saveState();
+        }
+
+        // Atualiza a exibição do cronômetro do tempo de posse
+        function updateShotClockDisplay() {
+            shotClockDisplay.textContent = shotClockTime;
+            saveState();
+        }
+
+        // Define o tempo de jogo em minutos
+        function setGameTime(minutes) {
+            gameTime = minutes * 60;
+            updateGameTimeDisplay();
+            speak(`Tempo de jogo definido para ${minutes} minutos`);
+        }
+
+        // Anuncia o tempo de posse (agora apenas 5, 3, 2, 1 segundos)
+        function announceShotClock() {
+            if (shotClockTime === 0) {
+                lastAnnouncedShotTime = 0;
+                return;
+            }
+            
+            if (shotClockTime === 5 || shotClockTime === 3 || shotClockTime === 2 || shotClockTime === 1) {
+                if (shotClockTime !== lastAnnouncedShotTime) {
+                    speak(shotClockTime.toString());
+                    lastAnnouncedShotTime = shotClockTime;
+                }
+            } else {
+                lastAnnouncedShotTime = 0;
+            }
+        }
+
+        // Atualiza o display do período
+        function updatePeriodDisplay() {
+            let periodText;
+            if (currentPeriod <= MAX_PERIODS) {
+                periodText = `${currentPeriod}º Período`;
+            } else {
+                const overtimeNumber = currentPeriod - MAX_PERIODS;
+                periodText = `Prorrogação ${overtimeNumber}`;
+            }
+            
+            periodDisplay.textContent = periodText;
+            previewPeriod.textContent = periodText;
+            
+            // Define o tempo de jogo baseado no período
+            if (currentPeriod <= MAX_PERIODS) {
+                gameTime = PERIOD_TIME;
+            } else {
+                gameTime = OVERTIME_TIME;
+            }
+            
+            updateGameTimeDisplay();
+            saveState();
+        }
+
+        // Avança para o próximo período
+        function nextPeriod() {
+            currentPeriod++;
+            updatePeriodDisplay();
+            
+            if (currentPeriod <= MAX_PERIODS) {
+                speak(`Início do ${currentPeriod}º período`);
+            } else {
+                const overtimeNumber = currentPeriod - MAX_PERIODS;
+                speak(`Início da ${overtimeNumber}ª prorrogação`);
+            }
+        }
+
+        // Volta para o período anterior
+        function previousPeriod() {
+            if (currentPeriod > 1) {
+                currentPeriod--;
+                updatePeriodDisplay();
+            }
+        }
+
+        // Inicia o cronômetro do jogo
+        function startGameTimer() {
+            if (isGameRunning) return;
+            
+            isGameRunning = true;
+            document.getElementById('start-pause-game').textContent = "Pausar Jogo";
+            
+            gameInterval = setInterval(() => {
+                gameTime--;
+                updateGameTimeDisplay();
+
+                if (gameTime <= 0) {
+                    clearInterval(gameInterval);
+                    clearInterval(shotClockInterval);
+                    isGameRunning = false;
+                    isShotClockRunning = false;
+                    document.getElementById('start-pause-game').textContent = "Iniciar Jogo";
+                    playHorn();
+                    setTimeout(nextPeriod, 2000);
+                }
+                
+                saveState();
+            }, 1000);
+        }
+
+        // Inicia ou continua o tempo de posse
+        function startShotClock(reset = false) {
+            if (!isShotClockEnabled) return;
+            if (isShotClockRunning && !reset) return;
+            
+            isShotClockRunning = true;
+            lastAnnouncedShotTime = 0;
+            
+            shotClockInterval = setInterval(() => {
+                shotClockTime--;
+                updateShotClockDisplay();
+                announceShotClock();
+
+                if (shotClockTime <= 0) {
+                    shotClockTime = 12;
+                    updateShotClockDisplay();
+                    playHorn();
+                }
+                
+                saveState();
+            }, 1000);
+        }
+
+        // Alterna a execução do cronômetro do jogo
+        function toggleGameTimer() {
+            if (isGameRunning) {
+                clearInterval(gameInterval);
+                clearInterval(shotClockInterval);
+                isGameRunning = false;
+                isShotClockRunning = false;
+                document.getElementById('start-pause-game').textContent = "Iniciar Jogo";
+            } else {
+                startGameTimer();
+                startShotClock();
+            }
+            
+            saveState();
+        }
+
+        // Reseta o cronômetro do jogo e do tempo de posse
+        function resetAll() {
+            clearInterval(gameInterval);
+            clearInterval(shotClockInterval);
+            
+            // Reset placar e faltas
+            whiteScore = 0;
+            blueScore = 0;
+            whiteFouls = 0;
+            blueFouls = 0;
+            
+            previewWhiteScore.textContent = "0";
+            previewBlueScore.textContent = "0";
+            previewWhiteFoul.textContent = "0";
+            previewBlueFoul.textContent = "0";
+            
+            // Reset timers
+            currentPeriod = 1;
+            gameTime = PERIOD_TIME;
+            shotClockTime = 12;
+            updateGameTimeDisplay();
+            updateShotClockDisplay();
+            updatePeriodDisplay();
+            
+            isGameRunning = false;
+            isShotClockRunning = false;
+            document.getElementById('start-pause-game').textContent = "Iniciar Jogo";
+            
+            speak("Placar resetado");
+            saveState();
+        }
+
+        // Reseta o tempo de posse para 12 segundos
+        function resetShotClock12() {
+            if (!isShotClockEnabled) return;
+            
+            clearInterval(shotClockInterval);
+            shotClockTime = 12;
+            updateShotClockDisplay();
+            startShotClock(true);
+        }
+
+        // Pedido de tempo
+        function requestTimeout() {
+            playHorn();
+            setTimeout(() => {
+                speak("Pedido de tempo");
+            }, 999);
+        }
+
+        // Alternar tela cheia
+        function toggleFullscreen() {
+            if (!isFullscreen) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Erro ao tentar entrar em tela cheia: ${err.message}`);
+                });
+                document.getElementById('fullscreen-button').textContent = "SAIR TELA CHEIA";
+                isFullscreen = true;
+            } else {
+                document.exitFullscreen();
+                document.getElementById('fullscreen-button').textContent = "TELA CHEIA";
+                isFullscreen = false;
+            }
+        }
+
+        // Alternar menu de configurações
+        function toggleConfigMenu() {
+            isConfigMenuOpen = !isConfigMenuOpen;
+            if (isConfigMenuOpen) {
+                configMenu.classList.add('open');
+                document.getElementById('config-button').textContent = "FECHAR";
+            } else {
+                configMenu.classList.remove('open');
+                document.getElementById('config-button').textContent = "CONFIG";
+            }
+        }
+
+        // Configura os atalhos do teclado
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', (event) => {
+                if (event.target.tagName === 'INPUT') return;
+                
+                const isNumpad = event.code.includes('Numpad');
+                const isNumberRow = !isNumpad && !isNaN(event.key);
+                
+                switch(event.key) {
+                    case '4':
+                    case 'Numpad4':
+                        adjustScore('white', 1);
+                        break;
+                    case '6':
+                    case 'Numpad6':
+                        adjustScore('blue', 1);
+                        break;
+                    case '1':
+                    case 'Numpad1':
+                        adjustFouls('white', 1);
+                        break;
+                    case '3':
+                    case 'Numpad3':
+                        adjustFouls('blue', 1);
+                        break;
+                    case '+':
+                    case 'NumpadAdd':
+                        toggleGameTimer();
+                        break;
+                    case '-':
+                    case 'NumpadSubtract':
+                        previousPeriod();
+                        break;
+                    case '7':
+                    case 'Numpad7':
+                        resetShotClock12();
+                        break;
+                    case '0':
+                    case 'Numpad0':
+                        playHorn();
+                        break;
+                    case 'Enter':
+                        requestTimeout();
+                        break;
+                    case ' ':
+                        toggleGameTimer();
+                        break;
+                }
+            });
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            loadVoices();
+            loadSettings();
+            loadState();
+            updateScoreboardUrl();
+            updateGameTimeDisplay();
+            updateShotClockDisplay();
+            updatePeriodDisplay();
+            setupKeyboardShortcuts();
+            
+            // Configura os event listeners
+            document.getElementById('game-time-increase').addEventListener('click', () => {
+                gameTime += 10;
+                updateGameTimeDisplay();
+            });
+            
+            document.getElementById('game-time-decrease').addEventListener('click', () => {
+                gameTime = Math.max(0, gameTime - 10);
+                updateGameTimeDisplay();
+            });
+            
+            document.getElementById('shot-clock-increase').addEventListener('click', () => {
+                shotClockTime = Math.min(99, shotClockTime + 1);
+                updateShotClockDisplay();
+            });
+            
+            document.getElementById('shot-clock-decrease').addEventListener('click', () => {
+                shotClockTime = Math.max(0, shotClockTime - 1);
+                updateShotClockDisplay();
+            });
+            
+            document.getElementById('reset-12').addEventListener('click', resetShotClock12);
+            
+            document.getElementById('time-request').addEventListener('click', requestTimeout);
+            document.getElementById('horn-button').addEventListener('click', playHorn);
+            document.getElementById('fullscreen-button').addEventListener('click', toggleFullscreen);
+            document.getElementById('config-button').addEventListener('click', toggleConfigMenu);
+            document.getElementById('save-names').addEventListener('click', saveSettings);
+            document.getElementById('reset-all').addEventListener('click', resetAll);
+            document.getElementById('start-pause-game').addEventListener('click', toggleGameTimer);
+            document.getElementById('increase-period').addEventListener('click', nextPeriod);
+            document.getElementById('decrease-period').addEventListener('click', previousPeriod);
+            
+            document.getElementById('voice-select').addEventListener('change', () => {
+                const selectedIndex = document.getElementById('voice-select').value;
+                selectedVoice = voices[selectedIndex];
+                localStorage.setItem('selectedVoice', selectedIndex);
+            });
+
+            document.getElementById('shot-clock-toggle').addEventListener('change', () => {
+                isShotClockEnabled = document.getElementById('shot-clock-toggle').checked;
+                document.getElementById('shot-clock-container').style.display = isShotClockEnabled ? 'flex' : 'none';
+                
+                if (!isShotClockEnabled) {
+                    clearInterval(shotClockInterval);
+                    isShotClockRunning = false;
+                }
+                
+                saveState();
+            });
+        });
+    </script>
+</body>
+</html>

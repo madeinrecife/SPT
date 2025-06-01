@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#121212">
+    <meta name="description" content="Placar de Basquete para TV">
+    <title>Placar Basquete TV</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        :root {
+            --cor-branco: #ffffff;
+            --cor-azul: #1a73e8;
+            --cor-fundo: #121212;
+            --cor-texto: #e0e0e0;
+            --cor-destaque: #4CAF50;
+            --cor-alerta: #f44336;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            touch-action: none;
+        }
+
+        /* Scoreboard TV */
+        .scoreboard-tv {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            max-width: 1200px;
+            max-height: 800px;
+            padding: 20px;
+        }
+
+        .teams-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex: 1;
+        }
+
+        .team-tv {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            border-radius: 15px;
+            margin: 0 10px;
+        }
+
+        .team-white {
+            background-color: var(--cor-branco);
+            color: #000;
+        }
+
+        .team-blue {
+            background-color: var(--cor-azul);
+            color: var(--cor-branco);
+        }
+
+        .team-name-tv {
+            font-size: 4rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .team-score-tv {
+            font-size: 10rem;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .foul-box-tv {
+            font-size: 3rem;
+            font-weight: bold;
+            padding: 15px 30px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .foul-white {
+            background-color: var(--cor-branco);
+            color: #000;
+        }
+
+        .foul-blue {
+            background-color: var(--cor-azul);
+            color: var(--cor-branco);
+        }
+
+        .center-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 300px;
+        }
+
+        .logo-tv {
+            height: 120px;
+            width: auto;
+            margin-bottom: 20px;
+        }
+
+        .period-tv {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .timers-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .timer-tv {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #333;
+            border-radius: 10px;
+            padding: 15px 30px;
+            margin: 0 10px;
+            flex: 1;
+        }
+
+        .timer-display-tv {
+            font-size: 3.5rem;
+            font-weight: bold;
+            font-family: 'Roboto Mono', monospace;
+        }
+
+        .timer-label-tv {
+            font-size: 1.5rem;
+            margin-top: 10px;
+        }
+
+        /* Blinking effect for fouls */
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .blinking {
+            animation: blink 1s infinite;
+            background-color: var(--cor-alerta) !important;
+        }
+
+        /* Fullscreen button */
+        .fullscreen-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            background-color: #9c27b0;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+        /* Media Queries for different screen sizes */
+        @media (max-width: 1000px) {
+            .team-name-tv {
+                font-size: 3rem;
+            }
+            
+            .team-score-tv {
+                font-size: 8rem;
+            }
+            
+            .foul-box-tv {
+                font-size: 2.5rem;
+            }
+            
+            .period-tv {
+                font-size: 2.5rem;
+            }
+            
+            .timer-display-tv {
+                font-size: 3rem;
+            }
+        }
+
+        @media (max-width: 800px) {
+            .team-name-tv {
+                font-size: 2.5rem;
+            }
+            
+            .team-score-tv {
+                font-size: 6rem;
+            }
+            
+            .foul-box-tv {
+                font-size: 2rem;
+            }
+            
+            .period-tv {
+                font-size: 2rem;
+            }
+            
+            .timer-display-tv {
+                font-size: 2.5rem;
+            }
+            
+            .logo-tv {
+                height: 80px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .team-name-tv {
+                font-size: 2rem;
+            }
+            
+            .team-score-tv {
+                font-size: 4rem;
+            }
+            
+            .foul-box-tv {
+                font-size: 1.5rem;
+            }
+            
+            .period-tv {
+                font-size: 1.5rem;
+            }
+            
+            .timer-display-tv {
+                font-size: 2rem;
+            }
+            
+            .logo-tv {
+                height: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="scoreboard-tv">
+        <div class="teams-row">
+            <div class="team-tv team-white">
+                <div class="team-name-tv" id="tv-white-name">Branco</div>
+                <div class="team-score-tv" id="tv-white-score">0</div>
+                <div class="foul-box-tv foul-white" id="tv-white-foul">0</div>
+            </div>
+            
+            <div class="center-area">
+                <img src="basquete.gif" alt="Basquete" class="logo-tv">
+                <div class="period-tv" id="tv-period">1º Período</div>
+            </div>
+            
+            <div class="team-tv team-blue">
+                <div class="team-name-tv" id="tv-blue-name">Azul</div>
+                <div class="team-score-tv" id="tv-blue-score">0</div>
+                <div class="foul-box-tv foul-blue" id="tv-blue-foul">0</div>
+            </div>
+        </div>
+        
+        <div class="timers-row">
+            <div class="timer-tv">
+                <div class="timer-display-tv" id="tv-game-time">12:00</div>
+                <div class="timer-label-tv">TEMPO DE JOGO</div>
+            </div>
+            
+            <div class="timer-tv" id="tv-shot-clock-container">
+                <div class="timer-display-tv" id="tv-shot-clock">12</div>
+                <div class="timer-label-tv">TEMPO DE POSSE</div>
+            </div>
+        </div>
+    </div>
+
+    <button class="fullscreen-button" id="fullscreen-button">TELA CHEIA</button>
+
+    <script>
+        // Variáveis Globais
+        let whiteScore = 0;
+        let blueScore = 0;
+        let whiteFouls = 0;
+        let blueFouls = 0;
+        let whiteTeamName = "Branco";
+        let blueTeamName = "Azul";
+        let currentPeriod = 1;
+        let gameTime = 12 * 60;
+        let shotClockTime = 12;
+        let isShotClockEnabled = true;
+        let sessionId = null;
+        let checkInterval = null;
+
+        // Elementos HTML
+        const tvWhiteScore = document.getElementById('tv-white-score');
+        const tvBlueScore = document.getElementById('tv-blue-score');
+        const tvWhiteFoul = document.getElementById('tv-white-foul');
+        const tvBlueFoul = document.getElementById('tv-blue-foul');
+        const tvWhiteName = document.getElementById('tv-white-name');
+        const tvBlueName = document.getElementById('tv-blue-name');
+        const tvPeriod = document.getElementById('tv-period');
+        const tvGameTime = document.getElementById('tv-game-time');
+        const tvShotClock = document.getElementById('tv-shot-clock');
+        const tvShotClockContainer = document.getElementById('tv-shot-clock-container');
+
+        // Obtém o sessionId da URL
+        function getSessionIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('session');
+        }
+
+        // Carrega o estado do localStorage
+        function loadState() {
+            const savedState = localStorage.getItem(`scoreboardState-${sessionId}`);
+            if (savedState) {
+                const state = JSON.parse(savedState);
+                
+                whiteScore = state.whiteScore || 0;
+                blueScore = state.blueScore || 0;
+                whiteFouls = state.whiteFouls || 0;
+                blueFouls = state.blueFouls || 0;
+                whiteTeamName = state.whiteTeamName || "Branco";
+                blueTeamName = state.blueTeamName || "Azul";
+                currentPeriod = state.currentPeriod || 1;
+                gameTime = state.gameTime || 12 * 60;
+                shotClockTime = state.shotClockTime || 12;
+                isShotClockEnabled = state.isShotClockEnabled !== undefined ? state.isShotClockEnabled : true;
+                
+                updateDisplays();
+            }
+        }
+
+        // Verifica por atualizações periodicamente
+        function startCheckingForUpdates() {
+            if (checkInterval) clearInterval(checkInterval);
+            
+            checkInterval = setInterval(() => {
+                loadState();
+            }, 1000);
+        }
+
+        // Atualiza todos os displays
+        function updateDisplays() {
+            tvWhiteScore.textContent = whiteScore;
+            tvBlueScore.textContent = blueScore;
+            tvWhiteFoul.textContent = whiteFouls;
+            tvBlueFoul.textContent = blueFouls;
+            tvWhiteName.textContent = whiteTeamName;
+            tvBlueName.textContent = blueTeamName;
+            
+            tvGameTime.textContent = formatTime(gameTime);
+            tvShotClock.textContent = shotClockTime;
+            
+            let periodText;
+            if (currentPeriod <= 4) {
+                periodText = `${currentPeriod}º Período`;
+            } else {
+                const overtimeNumber = currentPeriod - 4;
+                periodText = `Prorrogação ${overtimeNumber}`;
+            }
+            
+            tvPeriod.textContent = periodText;
+            
+            // Atualiza visibilidade do cronômetro de posse
+            tvShotClockContainer.style.display = isShotClockEnabled ? 'flex' : 'none';
+            
+            // Atualiza efeito de faltas estouradas
+            if (whiteFouls >= 5) {
+                tvWhiteFoul.classList.add('blinking');
+            } else {
+                tvWhiteFoul.classList.remove('blinking');
+            }
+            
+            if (blueFouls >= 5) {
+                tvBlueFoul.classList.add('blinking');
+            } else {
+                tvBlueFoul.classList.remove('blinking');
+            }
+        }
+
+        // Função para formatar o tempo em minutos e segundos
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        // Alternar tela cheia
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Erro ao tentar entrar em tela cheia: ${err.message}`);
+                });
+                document.getElementById('fullscreen-button').textContent = "SAIR TELA CHEIA";
+            } else {
+                document.exitFullscreen();
+                document.getElementById('fullscreen-button').textContent = "TELA CHEIA";
+            }
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            // Configura o botão de tela cheia
+            document.getElementById('fullscreen-button').addEventListener('click', toggleFullscreen);
+            
+            // Obtém o sessionId e inicia a verificação de atualizações
+            sessionId = getSessionIdFromUrl();
+            if (sessionId) {
+                loadState();
+                startCheckingForUpdates();
+            } else {
+                // Se não houver sessionId, exibe mensagem de erro
+                document.body.innerHTML = '<div style="text-align: center; padding: 20px;"><h1>Erro</h1><p>Esta página deve ser acessada através do link fornecido pelo controle.</p></div>';
+            }
+        });
+    </script>
+</body>
+</html>
