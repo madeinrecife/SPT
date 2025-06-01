@@ -2,11 +2,8 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#121212">
-    <meta name="description" content="Controle do Placar de Basquete">
-    <title>Controle Placar Basquete</title>
-    <link rel="manifest" href="manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SPARTA BASKETBALL PERNAMBUCO</title>
     <style>
         :root {
             --cor-branco: #ffffff;
@@ -46,53 +43,90 @@
             gap: 15px;
         }
 
-        /* Scoreboard Preview */
-        .scoreboard-preview {
+        /* Scoreboard */
+        .scoreboard {
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 5px;
             width: 100%;
-            border: 2px solid #333;
-            border-radius: 10px;
-            padding: 5px;
-            background-color: #222;
         }
 
-        .preview-team {
+        .team {
             flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 5px;
+            border-radius: 10px 10px 0 0;
+            padding: 10px;
+            min-height: 120px;
+            position: relative;
         }
 
-        .preview-team-white {
+        .team-white {
             background-color: var(--cor-branco);
             color: #000;
-            border-radius: 5px;
         }
 
-        .preview-team-blue {
+        .team-blue {
             background-color: var(--cor-azul);
             color: var(--cor-branco);
+        }
+
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 60px;
+            width: 60px;
+        }
+
+        .logo {
+            height: 50px;
+            width: auto;
+            max-width: 100%;
+        }
+
+        .team-name {
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-align: center;
+            word-break: break-word;
+        }
+
+        .team-score-container {
+            position: relative;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .team-score {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+            transition: all 0.3s;
+        }
+
+        .score-updated {
+            transform: scale(1.1);
+            color: var(--cor-destaque);
+        }
+
+        .score-box {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            cursor: pointer;
+            opacity: 0.3;
             border-radius: 5px;
         }
 
-        .preview-team-name {
-            font-size: 0.8rem;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .preview-team-score {
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-
-        .preview-foul {
-            font-size: 0.9rem;
-            margin-top: 3px;
+        .score-box:hover {
+            background-color: rgba(0,0,0,0.1);
         }
 
         /* Team Controls */
@@ -142,6 +176,54 @@
 
         .btn-foul:hover {
             background-color: #f44336;
+        }
+
+        /* Foul Display */
+        .team-with-fouls {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .foul-box {
+            flex: 1;
+            padding: 10px;
+            border-radius: 0 0 8px 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            position: relative;
+            margin-top: 5px;
+            z-index: 1;
+        }
+
+        .foul-box:hover {
+            opacity: 0.9;
+        }
+
+        .foul-box-click {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            cursor: pointer;
+            opacity: 0.3;
+            border-radius: 5px;
+        }
+
+        .foul-box-click:hover {
+            background-color: rgba(0,0,0,0.1);
+        }
+
+        .foul-white {
+            background-color: var(--cor-branco);
+            color: #000;
+        }
+
+        .foul-blue {
+            background-color: var(--cor-azul);
+            color: var(--cor-branco);
         }
 
         /* Period Display */
@@ -383,42 +465,22 @@
             transform: translateX(26px);
         }
 
-        /* Scoreboard URL */
-        .scoreboard-url {
-            margin-top: 15px;
-            width: 100%;
+        /* Blinking effect for fouls */
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
         }
 
-        .scoreboard-url input {
-            width: 100%;
-            padding: 10px;
-            border-radius: 5px;
-            border: none;
-            background-color: #454545;
-            color: white;
-            font-family: 'Roboto Mono', monospace;
-            font-size: 0.8rem;
-        }
-
-        /* Install Button */
-        #installButton {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 10px 15px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            display: none;
-            z-index: 1000;
+        .blinking {
+            animation: blink 1s infinite;
+            background-color: var(--cor-alerta) !important;
         }
 
         /* Media Queries for very small devices */
         @media (max-width: 350px) {
-            .preview-team-score {
-                font-size: 1.2rem;
+            .team-score {
+                font-size: 2rem;
             }
             
             .btn {
@@ -429,27 +491,52 @@
             .timer-display {
                 font-size: 1.5rem;
             }
+
+            .logo-container {
+                height: 50px;
+                width: 50px;
+            }
+
+            .logo {
+                height: 40px;
+            }
         }
     </style>
 </head>
 <body>
     <div id="app">
-        <!-- Scoreboard Preview -->
-        <div class="scoreboard-preview">
-            <div class="preview-team preview-team-white">
-                <div class="preview-team-name" id="preview-white-name">Branco</div>
-                <div class="preview-team-score" id="preview-white-score">0</div>
-                <div class="preview-foul" id="preview-white-foul">0</div>
+        <!-- Scoreboard -->
+        <div class="scoreboard">
+            <div class="team-with-fouls">
+                <div class="team team-white" id="white-team">
+                    <div class="team-name" id="white-team-name-display">Branco</div>
+                    <div class="team-score-container">
+                        <div class="team-score" id="white-score">0</div>
+                        <div class="score-box" id="white-score-box"></div>
+                    </div>
+                </div>
+                <div class="foul-box foul-white" id="white-foul">
+                    <div>0</div>
+                    <div class="foul-box-click" id="white-foul-click"></div>
+                </div>
             </div>
             
-            <div class="preview-team">
-                <div class="period-text" id="preview-period">1º Período</div>
+            <div class="logo-container">
+                <img src="basquete.gif" alt="Basquete" class="logo">
             </div>
             
-            <div class="preview-team preview-team-blue">
-                <div class="preview-team-name" id="preview-blue-name">Azul</div>
-                <div class="preview-team-score" id="preview-blue-score">0</div>
-                <div class="preview-foul" id="preview-blue-foul">0</div>
+            <div class="team-with-fouls">
+                <div class="team team-blue" id="blue-team">
+                    <div class="team-name" id="blue-team-name-display">Azul</div>
+                    <div class="team-score-container">
+                        <div class="team-score" id="blue-score">0</div>
+                        <div class="score-box" id="blue-score-box"></div>
+                    </div>
+                </div>
+                <div class="foul-box foul-blue" id="blue-foul">
+                    <div>0</div>
+                    <div class="foul-box-click" id="blue-foul-click"></div>
+                </div>
             </div>
         </div>
 
@@ -506,13 +593,15 @@
             <div class="timer-box">
                 <button class="btn" id="shot-clock-decrease">-</button>
                 <div>
-                    <div class="timer-display" id="shot-clock-display">12</div>
+                    <div class="timer-display" id="shot-clock-display">24</div>
                     <div class="timer-label">TEMPO DE POSSE</div>
                 </div>
                 <button class="btn" id="shot-clock-increase">+</button>
             </div>
             
             <div class="timer-controls">
+                <button class="btn btn-reset" id="reset-24">24s</button>
+                <button class="btn btn-reset" id="reset-14">14s</button>
                 <button class="btn btn-reset" id="reset-12">12s</button>
             </div>
         </div>
@@ -565,12 +654,6 @@
                 </div>
             </div>
             
-            <div class="input-group scoreboard-url">
-                <label>URL do Scoreboard:</label>
-                <input type="text" id="scoreboard-url" readonly>
-                <button class="btn" onclick="copyScoreboardUrl()">Copiar URL</button>
-            </div>
-            
             <div class="config-buttons">
                 <button class="btn" id="save-names">Salvar</button>
                 <button class="btn" id="reset-all">Resetar</button>
@@ -578,14 +661,12 @@
         </div>
     </div>
 
-    <button id="installButton" aria-label="Instalar aplicativo">Instalar App</button>
-
     <script>
         // Variáveis Globais
         const MAX_SCORE = 200;
         const MAX_PERIODS = 4;
-        const PERIOD_TIME = 12 * 60;
-        const OVERTIME_TIME = 5 * 60;
+        const PERIOD_TIME = 12 * 60; // 12 minutos em segundos
+        const OVERTIME_TIME = 5 * 60; // 5 minutos em segundos
         
         let whiteScore = 0;
         let blueScore = 0;
@@ -597,14 +678,12 @@
         let voices = [];
         let selectedVoice = null;
         let isShotClockEnabled = true;
-        let deferredPrompt;
-        let scoreboardUrl = "";
         
         // Timers
         let gameInterval;
         let shotClockInterval;
         let gameTime = PERIOD_TIME;
-        let shotClockTime = 12;
+        let shotClockTime = 24;
         let isGameRunning = false;
         let isShotClockRunning = false;
         let isFullscreen = false;
@@ -612,147 +691,16 @@
         let isConfigMenuOpen = false;
 
         // Elementos HTML
-        const previewWhiteScore = document.getElementById('preview-white-score');
-        const previewBlueScore = document.getElementById('preview-blue-score');
-        const previewWhiteFoul = document.getElementById('preview-white-foul');
-        const previewBlueFoul = document.getElementById('preview-blue-foul');
-        const previewWhiteName = document.getElementById('preview-white-name');
-        const previewBlueName = document.getElementById('preview-blue-name');
-        const previewPeriod = document.getElementById('preview-period');
+        const whiteScoreElement = document.getElementById('white-score');
+        const blueScoreElement = document.getElementById('blue-score');
+        const whiteFoulsElement = document.getElementById('white-foul');
+        const blueFoulsElement = document.getElementById('blue-foul');
+        const whiteTeamNameElement = document.getElementById('white-team-name-display');
+        const blueTeamNameElement = document.getElementById('blue-team-name-display');
         const gameTimeDisplay = document.getElementById('game-time-display');
         const shotClockDisplay = document.getElementById('shot-clock-display');
         const periodDisplay = document.getElementById('period-display');
         const configMenu = document.getElementById('config-menu');
-        const installButton = document.getElementById('installButton');
-        const scoreboardUrlInput = document.getElementById('scoreboard-url');
-
-        // Service Worker Registration
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(registration => {
-                        console.log('ServiceWorker registration successful');
-                    })
-                    .catch(err => {
-                        console.log('ServiceWorker registration failed: ', err);
-                    });
-            });
-        }
-
-        // PWA Installation Prompt
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            installButton.style.display = 'block';
-        });
-
-        installButton.addEventListener('click', () => {
-            installButton.style.display = 'none';
-            deferredPrompt.prompt();
-            deferredPrompt.userChoice.then((choiceResult) => {
-                if (choiceResult.outcome === 'accepted') {
-                    console.log('User accepted install');
-                } else {
-                    console.log('User dismissed install');
-                }
-                deferredPrompt = null;
-            });
-        });
-
-        // Gera um ID único para a sessão
-        function generateSessionId() {
-            return 'session-' + Math.random().toString(36).substr(2, 9);
-        }
-
-        // Atualiza a URL do scoreboard
-        function updateScoreboardUrl() {
-            const sessionId = localStorage.getItem('scoreboardSessionId') || generateSessionId();
-            localStorage.setItem('scoreboardSessionId', sessionId);
-            
-            const baseUrl = window.location.href.replace('index.html', 'scoreboard.html');
-            scoreboardUrl = `${baseUrl}?session=${sessionId}`;
-            scoreboardUrlInput.value = scoreboardUrl;
-        }
-
-        // Copia a URL do scoreboard para a área de transferência
-        function copyScoreboardUrl() {
-            scoreboardUrlInput.select();
-            document.execCommand('copy');
-            speak("URL copiada para a área de transferência");
-        }
-
-        // Salva o estado atual no localStorage
-        function saveState() {
-            const state = {
-                whiteScore,
-                blueScore,
-                whiteFouls,
-                blueFouls,
-                whiteTeamName,
-                blueTeamName,
-                currentPeriod,
-                gameTime,
-                shotClockTime,
-                isGameRunning,
-                isShotClockRunning
-            };
-            
-            const sessionId = localStorage.getItem('scoreboardSessionId');
-            if (sessionId) {
-                localStorage.setItem(`scoreboardState-${sessionId}`, JSON.stringify(state));
-            }
-        }
-
-        // Carrega o estado do localStorage
-        function loadState() {
-            const sessionId = localStorage.getItem('scoreboardSessionId');
-            if (sessionId) {
-                const savedState = localStorage.getItem(`scoreboardState-${sessionId}`);
-                if (savedState) {
-                    const state = JSON.parse(savedState);
-                    
-                    whiteScore = state.whiteScore || 0;
-                    blueScore = state.blueScore || 0;
-                    whiteFouls = state.whiteFouls || 0;
-                    blueFouls = state.blueFouls || 0;
-                    whiteTeamName = state.whiteTeamName || "Branco";
-                    blueTeamName = state.blueTeamName || "Azul";
-                    currentPeriod = state.currentPeriod || 1;
-                    gameTime = state.gameTime || PERIOD_TIME;
-                    shotClockTime = state.shotClockTime || 12;
-                    isGameRunning = state.isGameRunning || false;
-                    isShotClockRunning = state.isShotClockRunning || false;
-                    
-                    updateDisplays();
-                }
-            }
-        }
-
-        // Atualiza todos os displays
-        function updateDisplays() {
-            previewWhiteScore.textContent = whiteScore;
-            previewBlueScore.textContent = blueScore;
-            previewWhiteFoul.textContent = whiteFouls;
-            previewBlueFoul.textContent = blueFouls;
-            previewWhiteName.textContent = whiteTeamName;
-            previewBlueName.textContent = blueTeamName;
-            
-            gameTimeDisplay.textContent = formatTime(gameTime);
-            shotClockDisplay.textContent = shotClockTime;
-            
-            let periodText;
-            if (currentPeriod <= MAX_PERIODS) {
-                periodText = `${currentPeriod}º Período`;
-            } else {
-                const overtimeNumber = currentPeriod - MAX_PERIODS;
-                periodText = `Prorrogação ${overtimeNumber}`;
-            }
-            
-            periodDisplay.textContent = periodText;
-            previewPeriod.textContent = periodText;
-            
-            document.getElementById('start-pause-game').textContent = isGameRunning ? "Pausar Jogo" : "Iniciar Jogo";
-        }
 
         // Carrega as vozes disponíveis
         function loadVoices() {
@@ -806,8 +754,8 @@
             blueTeamName = document.getElementById('blue-team-name').value.trim() || "Azul";
             isShotClockEnabled = document.getElementById('shot-clock-toggle').checked;
             
-            previewWhiteName.textContent = whiteTeamName;
-            previewBlueName.textContent = blueTeamName;
+            whiteTeamNameElement.textContent = whiteTeamName;
+            blueTeamNameElement.textContent = blueTeamName;
             
             const selectedIndex = document.getElementById('voice-select').value;
             selectedVoice = voices[selectedIndex];
@@ -823,7 +771,6 @@
             
             speak("Configurações salvas");
             toggleConfigMenu();
-            saveState();
         }
 
         // Carrega configurações salvas
@@ -836,13 +783,13 @@
             if (savedWhiteTeam) {
                 whiteTeamName = savedWhiteTeam;
                 document.getElementById('white-team-name').value = savedWhiteTeam;
-                previewWhiteName.textContent = savedWhiteTeam;
+                whiteTeamNameElement.textContent = savedWhiteTeam;
             }
             
             if (savedBlueTeam) {
                 blueTeamName = savedBlueTeam;
                 document.getElementById('blue-team-name').value = savedBlueTeam;
-                previewBlueName.textContent = savedBlueTeam;
+                blueTeamNameElement.textContent = savedBlueTeam;
             }
             
             if (savedVoice && voices[savedVoice]) {
@@ -873,19 +820,19 @@
                 currentScore = whiteScore;
                 newScore = Math.max(0, Math.min(MAX_SCORE, currentScore + points));
                 whiteScore = newScore;
-                scoreElement = previewWhiteScore;
+                scoreElement = whiteScoreElement;
+                scoreElement.textContent = newScore;
                 teamName = whiteTeamName;
             } else {
                 currentScore = blueScore;
                 newScore = Math.max(0, Math.min(MAX_SCORE, currentScore + points));
                 blueScore = newScore;
-                scoreElement = previewBlueScore;
+                scoreElement = blueScoreElement;
+                scoreElement.textContent = newScore;
                 teamName = blueTeamName;
             }
             
-            scoreElement.textContent = newScore;
             scoreUpdateEffect(scoreElement);
-            saveState();
             
             if (!silent) {
                 speak(`${teamName} ${newScore} pontos`);
@@ -899,17 +846,26 @@
             if (team === 'white') {
                 whiteFouls = Math.max(0, whiteFouls + fouls);
                 totalFouls = whiteFouls;
-                foulElement = previewWhiteFoul;
+                foulElement = whiteFoulsElement.firstElementChild;
+                foulElement.textContent = totalFouls;
                 teamName = whiteTeamName;
             } else {
                 blueFouls = Math.max(0, blueFouls + fouls);
                 totalFouls = blueFouls;
-                foulElement = previewBlueFoul;
+                foulElement = blueFoulsElement.firstElementChild;
+                foulElement.textContent = totalFouls;
                 teamName = blueTeamName;
             }
 
-            foulElement.textContent = totalFouls;
-            saveState();
+            // Remove classe blinking se tiver menos que 5 faltas
+            if (totalFouls < 5) {
+                foulElement.parentElement.classList.remove('blinking');
+            }
+
+            // Adiciona classe blinking se tiver 5 faltas
+            if (totalFouls >= 5) {
+                foulElement.parentElement.classList.add('blinking');
+            }
 
             if (!silent) {
                 if (totalFouls === 5) {
@@ -931,13 +887,11 @@
         function updateGameTimeDisplay() {
             const timeString = formatTime(gameTime);
             gameTimeDisplay.textContent = timeString;
-            saveState();
         }
 
         // Atualiza a exibição do cronômetro do tempo de posse
         function updateShotClockDisplay() {
             shotClockDisplay.textContent = shotClockTime;
-            saveState();
         }
 
         // Define o tempo de jogo em minutos
@@ -947,14 +901,14 @@
             speak(`Tempo de jogo definido para ${minutes} minutos`);
         }
 
-        // Anuncia o tempo de posse (agora apenas 5, 3, 2, 1 segundos)
+        // Anuncia o tempo de posse
         function announceShotClock() {
             if (shotClockTime === 0) {
                 lastAnnouncedShotTime = 0;
                 return;
             }
             
-            if (shotClockTime === 5 || shotClockTime === 3 || shotClockTime === 2 || shotClockTime === 1) {
+            if (shotClockTime === 10 || shotClockTime === 5 || shotClockTime <= 3) {
                 if (shotClockTime !== lastAnnouncedShotTime) {
                     speak(shotClockTime.toString());
                     lastAnnouncedShotTime = shotClockTime;
@@ -975,7 +929,6 @@
             }
             
             periodDisplay.textContent = periodText;
-            previewPeriod.textContent = periodText;
             
             // Define o tempo de jogo baseado no período
             if (currentPeriod <= MAX_PERIODS) {
@@ -985,7 +938,6 @@
             }
             
             updateGameTimeDisplay();
-            saveState();
         }
 
         // Avança para o próximo período
@@ -1029,8 +981,6 @@
                     playHorn();
                     setTimeout(nextPeriod, 2000);
                 }
-                
-                saveState();
             }, 1000);
         }
 
@@ -1048,12 +998,10 @@
                 announceShotClock();
 
                 if (shotClockTime <= 0) {
-                    shotClockTime = 12;
+                    shotClockTime = 24;
                     updateShotClockDisplay();
                     playHorn();
                 }
-                
-                saveState();
             }, 1000);
         }
 
@@ -1069,8 +1017,6 @@
                 startGameTimer();
                 startShotClock();
             }
-            
-            saveState();
         }
 
         // Reseta o cronômetro do jogo e do tempo de posse
@@ -1084,15 +1030,15 @@
             whiteFouls = 0;
             blueFouls = 0;
             
-            previewWhiteScore.textContent = "0";
-            previewBlueScore.textContent = "0";
-            previewWhiteFoul.textContent = "0";
-            previewBlueFoul.textContent = "0";
+            whiteScoreElement.textContent = "0";
+            blueScoreElement.textContent = "0";
+            whiteFoulsElement.firstElementChild.textContent = "0";
+            blueFoulsElement.firstElementChild.textContent = "0";
             
             // Reset timers
             currentPeriod = 1;
             gameTime = PERIOD_TIME;
-            shotClockTime = 12;
+            shotClockTime = 24;
             updateGameTimeDisplay();
             updateShotClockDisplay();
             updatePeriodDisplay();
@@ -1101,11 +1047,32 @@
             isShotClockRunning = false;
             document.getElementById('start-pause-game').textContent = "Iniciar Jogo";
             
+            // Reset piscar
+            whiteFoulsElement.classList.remove('blinking');
+            blueFoulsElement.classList.remove('blinking');
+            
             speak("Placar resetado");
-            saveState();
         }
 
-        // Reseta o tempo de posse para 12 segundos
+        // Reseta o tempo de posse para valores específicos
+        function resetShotClock24() {
+            if (!isShotClockEnabled) return;
+            
+            clearInterval(shotClockInterval);
+            shotClockTime = 24;
+            updateShotClockDisplay();
+            startShotClock(true);
+        }
+
+        function resetShotClock14() {
+            if (!isShotClockEnabled) return;
+            
+            clearInterval(shotClockInterval);
+            shotClockTime = 14;
+            updateShotClockDisplay();
+            startShotClock(true);
+        }
+
         function resetShotClock12() {
             if (!isShotClockEnabled) return;
             
@@ -1185,6 +1152,14 @@
                         break;
                     case '7':
                     case 'Numpad7':
+                        resetShotClock24();
+                        break;
+                    case '8':
+                    case 'Numpad8':
+                        resetShotClock14();
+                        break;
+                    case '9':
+                    case 'Numpad9':
                         resetShotClock12();
                         break;
                     case '0':
@@ -1205,14 +1180,17 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadVoices();
             loadSettings();
-            loadState();
-            updateScoreboardUrl();
             updateGameTimeDisplay();
             updateShotClockDisplay();
             updatePeriodDisplay();
             setupKeyboardShortcuts();
             
             // Configura os event listeners
+            document.getElementById('white-score-box').addEventListener('click', () => adjustScore('white', -1, true));
+            document.getElementById('blue-score-box').addEventListener('click', () => adjustScore('blue', -1, true));
+            document.getElementById('white-foul-click').addEventListener('click', () => adjustFouls('white', -1, true));
+            document.getElementById('blue-foul-click').addEventListener('click', () => adjustFouls('blue', -1, true));
+            
             document.getElementById('game-time-increase').addEventListener('click', () => {
                 gameTime += 10;
                 updateGameTimeDisplay();
@@ -1233,6 +1211,8 @@
                 updateShotClockDisplay();
             });
             
+            document.getElementById('reset-24').addEventListener('click', resetShotClock24);
+            document.getElementById('reset-14').addEventListener('click', resetShotClock14);
             document.getElementById('reset-12').addEventListener('click', resetShotClock12);
             
             document.getElementById('time-request').addEventListener('click', requestTimeout);
@@ -1259,8 +1239,6 @@
                     clearInterval(shotClockInterval);
                     isShotClockRunning = false;
                 }
-                
-                saveState();
             });
         });
     </script>
