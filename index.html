@@ -2,8 +2,11 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SPARTA BASKETBALL PERNAMBUCO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#121212">
+    <meta name="description" content="Placar de Basquete Mobile PWA">
+    <title>Placar Basquete PWA</title>
+    <link rel="manifest" href="manifest.json">
     <style>
         :root {
             --cor-branco: #ffffff;
@@ -477,6 +480,21 @@
             background-color: var(--cor-alerta) !important;
         }
 
+        /* Install Button */
+        #installButton {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+            z-index: 1000;
+        }
+
         /* Media Queries for very small devices */
         @media (max-width: 350px) {
             .team-score {
@@ -661,6 +679,8 @@
         </div>
     </div>
 
+    <button id="installButton" aria-label="Instalar aplicativo">Instalar App</button>
+
     <script>
         // Variáveis Globais
         const MAX_SCORE = 200;
@@ -678,6 +698,7 @@
         let voices = [];
         let selectedVoice = null;
         let isShotClockEnabled = true;
+        let deferredPrompt;
         
         // Timers
         let gameInterval;
@@ -701,6 +722,40 @@
         const shotClockDisplay = document.getElementById('shot-clock-display');
         const periodDisplay = document.getElementById('period-display');
         const configMenu = document.getElementById('config-menu');
+        const installButton = document.getElementById('installButton');
+
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+
+        // PWA Installation Prompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installButton.style.display = 'block';
+        });
+
+        installButton.addEventListener('click', () => {
+            installButton.style.display = 'none';
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('User accepted install');
+                } else {
+                    console.log('User dismissed install');
+                }
+                deferredPrompt = null;
+            });
+        });
 
         // Carrega as vozes disponíveis
         function loadVoices() {
@@ -835,7 +890,12 @@
             scoreUpdateEffect(scoreElement);
             
             if (!silent) {
-                speak(`${teamName} ${newScore} pontos`);
+                // Correção da concordância para singular/plural
+                if (newScore === 1) {
+                    speak(`${teamName} 1 ponto`);
+                } else {
+                    speak(`${teamName} ${newScore} pontos`);
+                }
             }
         }
 
@@ -871,7 +931,12 @@
                 if (totalFouls === 5) {
                     speak(`${teamName} com faltas estouradas!`);
                 } else {
-                    speak(`${totalFouls} faltas para ${teamName}`);
+                    // Correção da concordância para singular/plural
+                    if (totalFouls === 1) {
+                        speak(`1 falta para ${teamName}`);
+                    } else {
+                        speak(`${totalFouls} faltas para ${teamName}`);
+                    }
                 }
             }
         }
