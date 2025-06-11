@@ -345,6 +345,14 @@
             background-color: #7b1fa2;
         }
 
+        .btn-simple {
+            background-color: #FF9800;
+        }
+
+        .btn-simple:hover {
+            background-color: #F57C00;
+        }
+
         .btn-config {
             background-color: #607d8b;
         }
@@ -369,65 +377,68 @@
             padding: 15px;
         }
 
-        .team-inputs {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
         .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
+            margin-bottom: 15px;
         }
 
         .input-group label {
-            font-size: 0.9rem;
+            display: block;
+            margin-bottom: 5px;
             font-weight: bold;
         }
 
-        .input-group input, .input-group select {
+        .input-group input,
+        .input-group select {
+            width: 100%;
             padding: 10px;
             border-radius: 5px;
             border: none;
-            background-color: #454545;
+            background-color: #222;
             color: white;
-        }
-
-        .config-buttons {
-            display: flex;
-            gap: 10px;
+            font-size: 1rem;
         }
 
         .time-options {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            justify-content: space-between;
+            gap: 8px;
+            margin-top: 8px;
         }
 
         .time-option {
             flex: 1;
-            min-width: calc(50% - 5px);
+            min-width: calc(50% - 4px);
+            padding: 8px;
+            font-size: 0.9rem;
+        }
+
+        .config-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .config-buttons .btn {
+            flex: 1;
+            padding: 12px;
         }
 
         .toggle-container {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin: 10px 0;
+            margin: 15px 0;
         }
 
         .toggle-label {
-            font-size: 0.9rem;
             font-weight: bold;
         }
 
         .toggle-switch {
             position: relative;
             display: inline-block;
-            width: 50px;
-            height: 24px;
+            width: 60px;
+            height: 34px;
         }
 
         .toggle-switch input {
@@ -445,14 +456,14 @@
             bottom: 0;
             background-color: #ccc;
             transition: .4s;
-            border-radius: 24px;
+            border-radius: 34px;
         }
 
         .toggle-slider:before {
             position: absolute;
             content: "";
-            height: 16px;
-            width: 16px;
+            height: 26px;
+            width: 26px;
             left: 4px;
             bottom: 4px;
             background-color: white;
@@ -466,6 +477,143 @@
 
         input:checked + .toggle-slider:before {
             transform: translateX(26px);
+        }
+
+        /* Simple Mode Styles */
+        .simple-mode {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--cor-fundo);
+            z-index: 100;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+
+        .simple-mode.active {
+            display: flex;
+        }
+
+        .simple-scoreboard {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            justify-content: space-between;
+            align-items: stretch;
+            gap: 10px;
+        }
+
+        .simple-team {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100%;
+        }
+
+        .simple-team-name {
+            font-size: 5vw;
+            font-weight: bold;
+            text-align: center;
+            padding: 10px 0;
+            word-break: break-word;
+        }
+
+        .simple-team-name-white {
+            background-color: var(--cor-branco);
+            color: #000;
+        }
+
+        .simple-team-name-blue {
+            background-color: var(--cor-azul);
+            color: var(--cor-branco);
+        }
+
+        .simple-team-score {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 15vw;
+            font-weight: bold;
+            position: relative;
+        }
+
+        .simple-team-fouls {
+            padding: 10px;
+            font-size: 6vw;
+            font-weight: bold;
+            text-align: center;
+            position: relative;
+        }
+
+        .simple-team-white {
+            background-color: var(--cor-branco);
+            color: #000;
+        }
+
+        .simple-team-blue {
+            background-color: var(--cor-azul);
+            color: var(--cor-branco);
+        }
+
+        .simple-team-fouls-white {
+            background-color: var(--cor-branco);
+            color: #000;
+        }
+
+        .simple-team-fouls-blue {
+            background-color: var(--cor-azul);
+            color: var(--cor-branco);
+        }
+
+        .simple-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin: 0 10px;
+            height: 100%;
+        }
+
+        .simple-logo {
+            height: 15vh;
+            width: auto;
+            cursor: pointer;
+        }
+
+        .simple-timer {
+            font-size: 6vw;
+            font-weight: bold;
+            font-family: 'Roboto Mono', monospace;
+            text-align: center;
+        }
+
+        .simple-shot-clock-container {
+            display: block;
+            margin: 10px 0;
+        }
+
+        .simple-shot-clock-container.hidden {
+            display: none;
+        }
+
+        .simple-shot-clock {
+            font-size: 12vw;
+            font-weight: bold;
+            font-family: 'Roboto Mono', monospace;
+            text-align: center;
+        }
+
+        .simple-period {
+            font-size: 4vw;
+            font-weight: bold;
+            text-align: center;
         }
 
         /* Blinking effect for fouls */
@@ -495,7 +643,7 @@
             z-index: 1000;
         }
 
-        /* Media Queries for very small devices */
+        /* Media Queries */
         @media (max-width: 350px) {
             .team-score {
                 font-size: 2rem;
@@ -517,6 +665,32 @@
 
             .logo {
                 height: 40px;
+            }
+        }
+
+        @media (min-width: 800px) {
+            .simple-team-name {
+                font-size: 40px;
+            }
+            
+            .simple-team-score {
+                font-size: 120px;
+            }
+            
+            .simple-team-fouls {
+                font-size: 48px;
+            }
+            
+            .simple-timer {
+                font-size: 48px;
+            }
+            
+            .simple-shot-clock {
+                font-size: 96px;
+            }
+            
+            .simple-period {
+                font-size: 32px;
             }
         }
     </style>
@@ -632,6 +806,7 @@
             </div>
             <div class="action-row">
                 <button class="btn btn-action btn-fullscreen" id="fullscreen-button">TELA CHEIA</button>
+                <button class="btn btn-action btn-simple" id="simple-button">SIMPLES</button>
                 <button class="btn btn-action btn-config" id="config-button">CONFIG</button>
             </div>
         </div>
@@ -679,6 +854,44 @@
         </div>
     </div>
 
+    <!-- Simple Mode Display -->
+    <div class="simple-mode" id="simple-mode">
+        <div class="simple-scoreboard">
+            <div class="simple-team">
+                <div class="simple-team-name simple-team-name-white" id="simple-white-team-name">Branco</div>
+                <div class="simple-team-score simple-team-white" id="simple-white-score">
+                    <div>0</div>
+                    <div class="score-box" id="simple-white-score-box"></div>
+                </div>
+                <div class="simple-team-fouls simple-team-fouls-white" id="simple-white-foul">
+                    <div>0</div>
+                    <div class="foul-box-click" id="simple-white-foul-click"></div>
+                </div>
+            </div>
+            
+            <div class="simple-center">
+                <img src="basquete.gif" alt="Basquete" class="simple-logo" id="simple-logo-close">
+                <div class="simple-period" id="simple-period-display">1º Período</div>
+                <div class="simple-timer" id="simple-game-time-display">12:00</div>
+                <div class="simple-shot-clock-container" id="simple-shot-clock-container">
+                    <div class="simple-shot-clock" id="simple-shot-clock-display">24</div>
+                </div>
+            </div>
+            
+            <div class="simple-team">
+                <div class="simple-team-name simple-team-name-blue" id="simple-blue-team-name">Azul</div>
+                <div class="simple-team-score simple-team-blue" id="simple-blue-score">
+                    <div>0</div>
+                    <div class="score-box" id="simple-blue-score-box"></div>
+                </div>
+                <div class="simple-team-fouls simple-team-fouls-blue" id="simple-blue-foul">
+                    <div>0</div>
+                    <div class="foul-box-click" id="simple-blue-foul-click"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <button id="installButton" aria-label="Instalar aplicativo">Instalar App</button>
 
     <script>
@@ -710,6 +923,7 @@
         let isFullscreen = false;
         let lastAnnouncedShotTime = 0;
         let isConfigMenuOpen = false;
+        let isSimpleMode = false;
 
         // Elementos HTML
         const whiteScoreElement = document.getElementById('white-score');
@@ -723,6 +937,19 @@
         const periodDisplay = document.getElementById('period-display');
         const configMenu = document.getElementById('config-menu');
         const installButton = document.getElementById('installButton');
+        const simpleMode = document.getElementById('simple-mode');
+
+        // Simple Mode Elements
+        const simpleWhiteScore = document.getElementById('simple-white-score').firstElementChild;
+        const simpleBlueScore = document.getElementById('simple-blue-score').firstElementChild;
+        const simpleWhiteFoul = document.getElementById('simple-white-foul').firstElementChild;
+        const simpleBlueFoul = document.getElementById('simple-blue-foul').firstElementChild;
+        const simpleGameTimeDisplay = document.getElementById('simple-game-time-display');
+        const simpleShotClockDisplay = document.getElementById('simple-shot-clock-display');
+        const simplePeriodDisplay = document.getElementById('simple-period-display');
+        const simpleWhiteTeamName = document.getElementById('simple-white-team-name');
+        const simpleBlueTeamName = document.getElementById('simple-blue-team-name');
+        const simpleShotClockContainer = document.getElementById('simple-shot-clock-container');
 
         // Service Worker Registration
         if ('serviceWorker' in navigator) {
@@ -759,20 +986,39 @@
 
         // Carrega as vozes disponíveis
         function loadVoices() {
-            voices = window.speechSynthesis.getVoices();
-            const voiceSelect = document.getElementById('voice-select');
-            voiceSelect.innerHTML = '';
+            // Aguarda as vozes estarem disponíveis
+            let attempts = 0;
+            const maxAttempts = 10;
+            
+            const checkVoices = () => {
+                voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0 || attempts >= maxAttempts) {
+                    const voiceSelect = document.getElementById('voice-select');
+                    voiceSelect.innerHTML = '';
 
-            voices.forEach((voice, index) => {
-                const option = document.createElement('option');
-                option.value = index;
-                option.textContent = `${voice.name} (${voice.lang})`;
-                voiceSelect.appendChild(option);
-            });
+                    voices.forEach((voice, index) => {
+                        const option = document.createElement('option');
+                        option.value = index;
+                        option.textContent = `${voice.name} (${voice.lang})`;
+                        voiceSelect.appendChild(option);
+                    });
 
-            if (voices.length > 0) {
-                selectedVoice = voices[0];
-            }
+                    if (voices.length > 0) {
+                        selectedVoice = voices[0];
+                        // Restaura a voz salva se existir
+                        const savedVoice = localStorage.getItem('selectedVoice');
+                        if (savedVoice !== null && voices[savedVoice]) {
+                            voiceSelect.value = savedVoice;
+                            selectedVoice = voices[savedVoice];
+                        }
+                    }
+                } else {
+                    attempts++;
+                    setTimeout(checkVoices, 100);
+                }
+            };
+            
+            checkVoices();
         }
 
         // Configura o seletor de voz
@@ -780,16 +1026,24 @@
 
         // Função para falar texto
         function speak(text) {
-            if (!window.speechSynthesis) {
+            if (!window.speechSynthesis || !selectedVoice) {
                 console.warn("Síntese de voz não disponível");
                 return;
             }
             
+            // Cancela qualquer fala em andamento
             window.speechSynthesis.cancel();
+            
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.voice = selectedVoice;
             utterance.rate = 1.0;
             utterance.pitch = 1.0;
+            
+            // Adiciona tratamento de erro
+            utterance.onerror = (event) => {
+                console.error('Erro na síntese de voz:', event);
+            };
+            
             window.speechSynthesis.speak(utterance);
         }
 
@@ -803,6 +1057,28 @@
             }
         }
 
+        // Anuncia o placar atual
+        function announceScore() {
+            const minutes = Math.floor(gameTime / 60);
+            const seconds = gameTime % 60;
+            const timeString = `${minutes} minutos e ${seconds} segundos`;
+            
+            let periodText;
+            if (currentPeriod <= MAX_PERIODS) {
+                periodText = `${currentPeriod}º período`;
+            } else {
+                const overtimeNumber = currentPeriod - MAX_PERIODS;
+                periodText = `${overtimeNumber}ª prorrogação`;
+            }
+            
+            const announcement = 
+                `Placar atual. ${whiteTeamName} ${whiteScore} pontos. ` +
+                `${blueTeamName} ${blueScore} pontos. ` +
+                `Faltam ${timeString} para o fim do ${periodText}.`;
+            
+            speak(announcement);
+        }
+
         // Salva as configurações
         function saveSettings() {
             whiteTeamName = document.getElementById('white-team-name').value.trim() || "Branco";
@@ -811,12 +1087,15 @@
             
             whiteTeamNameElement.textContent = whiteTeamName;
             blueTeamNameElement.textContent = blueTeamName;
+            simpleWhiteTeamName.textContent = whiteTeamName;
+            simpleBlueTeamName.textContent = blueTeamName;
             
             const selectedIndex = document.getElementById('voice-select').value;
             selectedVoice = voices[selectedIndex];
             
             // Atualiza visibilidade do cronômetro de posse
             document.getElementById('shot-clock-container').style.display = isShotClockEnabled ? 'flex' : 'none';
+            simpleShotClockContainer.classList.toggle('hidden', !isShotClockEnabled);
             
             // Salva no localStorage
             localStorage.setItem('whiteTeamName', whiteTeamName);
@@ -839,23 +1118,26 @@
                 whiteTeamName = savedWhiteTeam;
                 document.getElementById('white-team-name').value = savedWhiteTeam;
                 whiteTeamNameElement.textContent = savedWhiteTeam;
+                simpleWhiteTeamName.textContent = savedWhiteTeam;
             }
             
             if (savedBlueTeam) {
                 blueTeamName = savedBlueTeam;
                 document.getElementById('blue-team-name').value = savedBlueTeam;
                 blueTeamNameElement.textContent = savedBlueTeam;
+                simpleBlueTeamName.textContent = savedBlueTeam;
             }
             
-            if (savedVoice && voices[savedVoice]) {
-                document.getElementById('voice-select').value = savedVoice;
-                selectedVoice = voices[savedVoice];
+            if (savedVoice !== null) {
+                // A voz será definida quando as vozes forem carregadas
+                localStorage.setItem('selectedVoice', savedVoice);
             }
             
             if (savedShotClockEnabled !== null) {
                 isShotClockEnabled = savedShotClockEnabled === 'true';
                 document.getElementById('shot-clock-toggle').checked = isShotClockEnabled;
                 document.getElementById('shot-clock-container').style.display = isShotClockEnabled ? 'flex' : 'none';
+                simpleShotClockContainer.classList.toggle('hidden', !isShotClockEnabled);
             }
         }
 
@@ -869,25 +1151,30 @@
 
         // Ajusta o placar dos times
         function adjustScore(team, points, silent = false) {
-            let currentScore, newScore, teamName, scoreElement;
+            let currentScore, newScore, teamName, scoreElement, simpleScoreElement;
             
             if (team === 'white') {
                 currentScore = whiteScore;
                 newScore = Math.max(0, Math.min(MAX_SCORE, currentScore + points));
                 whiteScore = newScore;
                 scoreElement = whiteScoreElement;
-                scoreElement.textContent = newScore;
+                simpleScoreElement = simpleWhiteScore;
                 teamName = whiteTeamName;
             } else {
                 currentScore = blueScore;
                 newScore = Math.max(0, Math.min(MAX_SCORE, currentScore + points));
                 blueScore = newScore;
                 scoreElement = blueScoreElement;
-                scoreElement.textContent = newScore;
+                simpleScoreElement = simpleBlueScore;
                 teamName = blueTeamName;
             }
             
+            // Atualiza os elementos visuais
+            scoreElement.textContent = newScore;
+            simpleScoreElement.textContent = newScore;
+            
             scoreUpdateEffect(scoreElement);
+            if (isSimpleMode) scoreUpdateEffect(simpleScoreElement);
             
             if (!silent) {
                 // Correção da concordância para singular/plural
@@ -901,30 +1188,36 @@
 
         // Ajusta as faltas coletivas
         function adjustFouls(team, fouls, silent = false) {
-            let totalFouls, foulElement, teamName;
+            let totalFouls, foulElement, simpleFoulElement, teamName;
             
             if (team === 'white') {
                 whiteFouls = Math.max(0, whiteFouls + fouls);
                 totalFouls = whiteFouls;
                 foulElement = whiteFoulsElement.firstElementChild;
-                foulElement.textContent = totalFouls;
+                simpleFoulElement = simpleWhiteFoul;
                 teamName = whiteTeamName;
             } else {
                 blueFouls = Math.max(0, blueFouls + fouls);
                 totalFouls = blueFouls;
                 foulElement = blueFoulsElement.firstElementChild;
-                foulElement.textContent = totalFouls;
+                simpleFoulElement = simpleBlueFoul;
                 teamName = blueTeamName;
             }
+
+            // Atualiza os elementos visuais
+            foulElement.textContent = totalFouls;
+            simpleFoulElement.textContent = totalFouls;
 
             // Remove classe blinking se tiver menos que 5 faltas
             if (totalFouls < 5) {
                 foulElement.parentElement.classList.remove('blinking');
+                if (isSimpleMode) simpleFoulElement.parentElement.classList.remove('blinking');
             }
 
             // Adiciona classe blinking se tiver 5 faltas
             if (totalFouls >= 5) {
                 foulElement.parentElement.classList.add('blinking');
+                if (isSimpleMode) simpleFoulElement.parentElement.classList.add('blinking');
             }
 
             if (!silent) {
@@ -952,11 +1245,13 @@
         function updateGameTimeDisplay() {
             const timeString = formatTime(gameTime);
             gameTimeDisplay.textContent = timeString;
+            simpleGameTimeDisplay.textContent = timeString;
         }
 
         // Atualiza a exibição do cronômetro do tempo de posse
         function updateShotClockDisplay() {
             shotClockDisplay.textContent = shotClockTime;
+            simpleShotClockDisplay.textContent = shotClockTime;
         }
 
         // Define o tempo de jogo em minutos
@@ -994,6 +1289,7 @@
             }
             
             periodDisplay.textContent = periodText;
+            simplePeriodDisplay.textContent = periodText;
             
             // Define o tempo de jogo baseado no período
             if (currentPeriod <= MAX_PERIODS) {
@@ -1044,7 +1340,11 @@
                     isShotClockRunning = false;
                     document.getElementById('start-pause-game').textContent = "Iniciar Jogo";
                     playHorn();
-                    setTimeout(nextPeriod, 2000);
+                    setTimeout(() => {
+                        nextPeriod();
+                        startGameTimer();
+                        startShotClock();
+                    }, 2000);
                 }
             }, 1000);
         }
@@ -1057,12 +1357,17 @@
             isShotClockRunning = true;
             lastAnnouncedShotTime = 0;
             
+            // Limpa qualquer intervalo existente
+            clearInterval(shotClockInterval);
+            
             shotClockInterval = setInterval(() => {
                 shotClockTime--;
                 updateShotClockDisplay();
                 announceShotClock();
 
                 if (shotClockTime <= 0) {
+                    clearInterval(shotClockInterval);
+                    isShotClockRunning = false;
                     shotClockTime = 24;
                     updateShotClockDisplay();
                     playHorn();
@@ -1078,6 +1383,7 @@
                 isGameRunning = false;
                 isShotClockRunning = false;
                 document.getElementById('start-pause-game').textContent = "Iniciar Jogo";
+                announceScore(); // Anuncia o placar quando o jogo é pausado
             } else {
                 startGameTimer();
                 startShotClock();
@@ -1099,6 +1405,10 @@
             blueScoreElement.textContent = "0";
             whiteFoulsElement.firstElementChild.textContent = "0";
             blueFoulsElement.firstElementChild.textContent = "0";
+            simpleWhiteScore.textContent = "0";
+            simpleBlueScore.textContent = "0";
+            simpleWhiteFoul.textContent = "0";
+            simpleBlueFoul.textContent = "0";
             
             // Reset timers
             currentPeriod = 1;
@@ -1115,6 +1425,8 @@
             // Reset piscar
             whiteFoulsElement.classList.remove('blinking');
             blueFoulsElement.classList.remove('blinking');
+            simpleWhiteFoul.parentElement.classList.remove('blinking');
+            simpleBlueFoul.parentElement.classList.remove('blinking');
             
             speak("Placar resetado");
         }
@@ -1123,7 +1435,6 @@
         function resetShotClock24() {
             if (!isShotClockEnabled) return;
             
-            clearInterval(shotClockInterval);
             shotClockTime = 24;
             updateShotClockDisplay();
             startShotClock(true);
@@ -1132,7 +1443,6 @@
         function resetShotClock14() {
             if (!isShotClockEnabled) return;
             
-            clearInterval(shotClockInterval);
             shotClockTime = 14;
             updateShotClockDisplay();
             startShotClock(true);
@@ -1141,7 +1451,6 @@
         function resetShotClock12() {
             if (!isShotClockEnabled) return;
             
-            clearInterval(shotClockInterval);
             shotClockTime = 12;
             updateShotClockDisplay();
             startShotClock(true);
@@ -1170,6 +1479,21 @@
             }
         }
 
+        // Alternar modo simplificado
+        function toggleSimpleMode() {
+            isSimpleMode = !isSimpleMode;
+            
+            if (isSimpleMode) {
+                simpleMode.classList.add('active');
+                // Entrar em tela cheia automaticamente
+                if (!isFullscreen) {
+                    toggleFullscreen();
+                }
+            } else {
+                simpleMode.classList.remove('active');
+            }
+        }
+
         // Alternar menu de configurações
         function toggleConfigMenu() {
             isConfigMenuOpen = !isConfigMenuOpen;
@@ -1193,10 +1517,12 @@
                 switch(event.key) {
                     case '4':
                     case 'Numpad4':
+                    case 'ArrowLeft': // Seta para esquerda
                         adjustScore('white', 1);
                         break;
                     case '6':
                     case 'Numpad6':
+                    case 'ArrowRight': // Seta para direita
                         adjustScore('blue', 1);
                         break;
                     case '1':
@@ -1206,6 +1532,13 @@
                     case '3':
                     case 'Numpad3':
                         adjustFouls('blue', 1);
+                        break;
+                    case '0':
+                    case 'Numpad0':
+                        requestTimeout();
+                        break;
+                    case 'Enter':
+                        toggleGameTimer();
                         break;
                     case '+':
                     case 'NumpadAdd':
@@ -1226,13 +1559,6 @@
                     case '9':
                     case 'Numpad9':
                         resetShotClock12();
-                        break;
-                    case '0':
-                    case 'Numpad0':
-                        playHorn();
-                        break;
-                    case 'Enter':
-                        requestTimeout();
                         break;
                     case ' ':
                         toggleGameTimer();
@@ -1255,6 +1581,13 @@
             document.getElementById('blue-score-box').addEventListener('click', () => adjustScore('blue', -1, true));
             document.getElementById('white-foul-click').addEventListener('click', () => adjustFouls('white', -1, true));
             document.getElementById('blue-foul-click').addEventListener('click', () => adjustFouls('blue', -1, true));
+            
+            // Listeners para o modo simplificado
+            document.getElementById('simple-white-score-box').addEventListener('click', () => adjustScore('white', -1, true));
+            document.getElementById('simple-blue-score-box').addEventListener('click', () => adjustScore('blue', -1, true));
+            document.getElementById('simple-white-foul-click').addEventListener('click', () => adjustFouls('white', -1, true));
+            document.getElementById('simple-blue-foul-click').addEventListener('click', () => adjustFouls('blue', -1, true));
+            document.getElementById('simple-logo-close').addEventListener('click', toggleSimpleMode);
             
             document.getElementById('game-time-increase').addEventListener('click', () => {
                 gameTime += 10;
@@ -1283,6 +1616,7 @@
             document.getElementById('time-request').addEventListener('click', requestTimeout);
             document.getElementById('horn-button').addEventListener('click', playHorn);
             document.getElementById('fullscreen-button').addEventListener('click', toggleFullscreen);
+            document.getElementById('simple-button').addEventListener('click', toggleSimpleMode);
             document.getElementById('config-button').addEventListener('click', toggleConfigMenu);
             document.getElementById('save-names').addEventListener('click', saveSettings);
             document.getElementById('reset-all').addEventListener('click', resetAll);
@@ -1292,13 +1626,17 @@
             
             document.getElementById('voice-select').addEventListener('change', () => {
                 const selectedIndex = document.getElementById('voice-select').value;
-                selectedVoice = voices[selectedIndex];
-                localStorage.setItem('selectedVoice', selectedIndex);
+                if (voices[selectedIndex]) {
+                    selectedVoice = voices[selectedIndex];
+                    localStorage.setItem('selectedVoice', selectedIndex);
+                }
             });
 
             document.getElementById('shot-clock-toggle').addEventListener('change', () => {
                 isShotClockEnabled = document.getElementById('shot-clock-toggle').checked;
                 document.getElementById('shot-clock-container').style.display = isShotClockEnabled ? 'flex' : 'none';
+                simpleShotClockContainer.classList.toggle('hidden', !isShotClockEnabled);
+                localStorage.setItem('isShotClockEnabled', isShotClockEnabled);
                 
                 if (!isShotClockEnabled) {
                     clearInterval(shotClockInterval);
