@@ -373,7 +373,7 @@
         }
 
         .config-menu.open {
-            max-height: 500px;
+            max-height: 600px;
             padding: 15px;
         }
 
@@ -479,6 +479,35 @@
             transform: translateX(26px);
         }
 
+        /* Game Mode Selector */
+        .game-mode-selector {
+            display: flex;
+            justify-content: center;
+            margin: 15px 0;
+        }
+
+        .mode-btn {
+            padding: 8px 15px;
+            border: none;
+            background-color: #333;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .mode-btn:first-child {
+            border-radius: 8px 0 0 8px;
+        }
+
+        .mode-btn:last-child {
+            border-radius: 0 8px 8px 0;
+        }
+
+        .mode-btn.active {
+            background-color: var(--cor-azul);
+            font-weight: bold;
+        }
+
         /* Simple Mode Styles */
         .simple-mode {
             display: none;
@@ -493,6 +522,8 @@
             justify-content: center;
             align-items: center;
             padding: 10px;
+            touch-action: pan-y;
+            cursor: none;
         }
 
         .simple-mode.active {
@@ -506,6 +537,7 @@
             justify-content: space-between;
             align-items: stretch;
             gap: 10px;
+            touch-action: pan-y;
         }
 
         .simple-team {
@@ -513,6 +545,7 @@
             display: flex;
             flex-direction: column;
             min-height: 100%;
+            touch-action: pan-y;
         }
 
         .simple-team-name {
@@ -541,6 +574,7 @@
             font-size: 15vw;
             font-weight: bold;
             position: relative;
+            touch-action: pan-y;
         }
 
         .simple-team-fouls {
@@ -549,6 +583,7 @@
             font-weight: bold;
             text-align: center;
             position: relative;
+            touch-action: pan-y;
         }
 
         .simple-team-white {
@@ -579,6 +614,7 @@
             gap: 15px;
             margin: 0 10px;
             height: 100%;
+            touch-action: pan-y;
         }
 
         .simple-logo {
@@ -829,6 +865,15 @@
                 <select id="voice-select"></select>
             </div>
             
+            <!-- Game Mode Selector -->
+            <div class="input-group">
+                <label>Modo de Jogo:</label>
+                <div class="game-mode-selector">
+                    <button class="mode-btn active" id="fiba-mode">FIBA</button>
+                    <button class="mode-btn" id="threex3-mode">3x3</button>
+                </div>
+            </div>
+            
             <div class="toggle-container">
                 <span class="toggle-label">Cronômetro de Posse:</span>
                 <label class="toggle-switch">
@@ -898,8 +943,11 @@
         // Variáveis Globais
         const MAX_SCORE = 200;
         const MAX_PERIODS = 4;
+        const MAX_PERIODS_3X3 = 1;
         const PERIOD_TIME = 12 * 60; // 12 minutos em segundos
+        const PERIOD_TIME_3X3 = 10 * 60; // 10 minutos em segundos
         const OVERTIME_TIME = 5 * 60; // 5 minutos em segundos
+        const OVERTIME_TIME_3X3 = 1 * 60; // 1 minuto em segundos
         
         let whiteScore = 0;
         let blueScore = 0;
@@ -912,6 +960,7 @@
         let selectedVoice = null;
         let isShotClockEnabled = true;
         let deferredPrompt;
+        let gameMode = 'fiba'; // 'fiba' ou '3x3'
         
         // Timers
         let gameInterval;
@@ -938,6 +987,8 @@
         const configMenu = document.getElementById('config-menu');
         const installButton = document.getElementById('installButton');
         const simpleMode = document.getElementById('simple-mode');
+        const fibaModeBtn = document.getElementById('fiba-mode');
+        const threex3ModeBtn = document.getElementById('threex3-mode');
 
         // Simple Mode Elements
         const simpleWhiteScore = document.getElementById('simple-white-score').firstElementChild;
@@ -950,6 +1001,12 @@
         const simpleWhiteTeamName = document.getElementById('simple-white-team-name');
         const simpleBlueTeamName = document.getElementById('simple-blue-team-name');
         const simpleShotClockContainer = document.getElementById('simple-shot-clock-container');
+
+        // Variáveis para controle de swipe
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchEndX = 0;
+        let touchEndY = 0;
 
         // Service Worker Registration
         if ('serviceWorker' in navigator) {
@@ -1064,11 +1121,15 @@
             const timeString = `${minutes} minutos e ${seconds} segundos`;
             
             let periodText;
-            if (currentPeriod <= MAX_PERIODS) {
-                periodText = `${currentPeriod}º período`;
+            if (gameMode === 'fiba') {
+                if (currentPeriod <= MAX_PERIODS) {
+                    periodText = `${currentPeriod}º período`;
+                } else {
+                    const overtimeNumber = currentPeriod - MAX_PERIODS;
+                    periodText = `${overtimeNumber}ª prorrogação`;
+                }
             } else {
-                const overtimeNumber = currentPeriod - MAX_PERIODS;
-                periodText = `${overtimeNumber}ª prorrogação`;
+                periodText = "jogo 3x3";
             }
             
             const announcement = 
@@ -1102,6 +1163,7 @@
             localStorage.setItem('blueTeamName', blueTeamName);
             localStorage.setItem('selectedVoice', selectedIndex);
             localStorage.setItem('isShotClockEnabled', isShotClockEnabled);
+            localStorage.setItem('gameMode', gameMode);
             
             speak("Configurações salvas");
             toggleConfigMenu();
@@ -1113,6 +1175,7 @@
             const savedBlueTeam = localStorage.getItem('blueTeamName');
             const savedVoice = localStorage.getItem('selectedVoice');
             const savedShotClockEnabled = localStorage.getItem('isShotClockEnabled');
+            const savedGameMode = localStorage.getItem('gameMode');
             
             if (savedWhiteTeam) {
                 whiteTeamName = savedWhiteTeam;
@@ -1139,6 +1202,33 @@
                 document.getElementById('shot-clock-container').style.display = isShotClockEnabled ? 'flex' : 'none';
                 simpleShotClockContainer.classList.toggle('hidden', !isShotClockEnabled);
             }
+            
+            if (savedGameMode) {
+                gameMode = savedGameMode;
+                setGameMode(savedGameMode);
+            }
+        }
+
+        // Define o modo de jogo (FIBA ou 3x3)
+        function setGameMode(mode) {
+            gameMode = mode;
+            
+            // Atualiza a UI dos botões de modo
+            if (mode === 'fiba') {
+                fibaModeBtn.classList.add('active');
+                threex3ModeBtn.classList.remove('active');
+                shotClockTime = 24;
+            } else {
+                fibaModeBtn.classList.remove('active');
+                threex3ModeBtn.classList.add('active');
+                shotClockTime = 12;
+            }
+            
+            // Reseta o jogo para aplicar as novas configurações
+            resetAll();
+            
+            // Salva o modo selecionado
+            localStorage.setItem('gameMode', mode);
         }
 
         // Efeito visual ao atualizar placar
@@ -1208,27 +1298,45 @@
             foulElement.textContent = totalFouls;
             simpleFoulElement.textContent = totalFouls;
 
-            // Remove classe blinking se tiver menos que 5 faltas
-            if (totalFouls < 5) {
-                foulElement.parentElement.classList.remove('blinking');
-                if (isSimpleMode) simpleFoulElement.parentElement.classList.remove('blinking');
+            // Remove classe blinking se tiver menos que o limite de faltas
+            if (gameMode === 'fiba') {
+                if (totalFouls < 5) {
+                    foulElement.parentElement.classList.remove('blinking');
+                    if (isSimpleMode) simpleFoulElement.parentElement.classList.remove('blinking');
+                }
+            } else {
+                if (totalFouls < 7) {
+                    foulElement.parentElement.classList.remove('blinking');
+                    if (isSimpleMode) simpleFoulElement.parentElement.classList.remove('blinking');
+                }
             }
 
-            // Adiciona classe blinking se tiver 5 faltas
-            if (totalFouls >= 5) {
+            // Adiciona classe blinking se tiver faltas estouradas
+            if ((gameMode === 'fiba' && totalFouls >= 5) || (gameMode === '3x3' && totalFouls >= 7)) {
                 foulElement.parentElement.classList.add('blinking');
                 if (isSimpleMode) simpleFoulElement.parentElement.classList.add('blinking');
             }
 
             if (!silent) {
-                if (totalFouls === 5) {
-                    speak(`${teamName} com faltas estouradas!`);
-                } else {
-                    // Correção da concordância para singular/plural
-                    if (totalFouls === 1) {
-                        speak(`1 falta para ${teamName}`);
+                if (gameMode === 'fiba') {
+                    if (totalFouls === 5) {
+                        speak(`${teamName} com faltas estouradas!`);
                     } else {
-                        speak(`${totalFouls} faltas para ${teamName}`);
+                        // Correção da concordância para singular/plural
+                        if (totalFouls === 1) {
+                            speak(`${teamName} 1 falta`);
+                        } else {
+                            speak(`${teamName} ${totalFouls} faltas`);
+                        }
+                    }
+                } else {
+                    // Modo 3x3 - Anúncio especial de faltas
+                    if (totalFouls <= 6) {
+                        speak(`${teamName} ${totalFouls} falta${totalFouls > 1 ? 's' : ''} 1 lance`);
+                    } else if (totalFouls <= 9) {
+                        speak(`${teamName} ${totalFouls} faltas 2 lances`);
+                    } else {
+                        speak(`${teamName} ${totalFouls} faltas 2 lances e posse`);
                     }
                 }
             }
@@ -1281,21 +1389,33 @@
         // Atualiza o display do período
         function updatePeriodDisplay() {
             let periodText;
-            if (currentPeriod <= MAX_PERIODS) {
-                periodText = `${currentPeriod}º Período`;
+            if (gameMode === 'fiba') {
+                if (currentPeriod <= MAX_PERIODS) {
+                    periodText = `${currentPeriod}º Período`;
+                } else {
+                    const overtimeNumber = currentPeriod - MAX_PERIODS;
+                    periodText = `Prorrogação ${overtimeNumber}`;
+                }
             } else {
-                const overtimeNumber = currentPeriod - MAX_PERIODS;
-                periodText = `Prorrogação ${overtimeNumber}`;
+                periodText = "Jogo 3x3";
             }
             
             periodDisplay.textContent = periodText;
             simplePeriodDisplay.textContent = periodText;
             
-            // Define o tempo de jogo baseado no período
-            if (currentPeriod <= MAX_PERIODS) {
-                gameTime = PERIOD_TIME;
+            // Define o tempo de jogo baseado no período e modo
+            if (gameMode === 'fiba') {
+                if (currentPeriod <= MAX_PERIODS) {
+                    gameTime = PERIOD_TIME;
+                } else {
+                    gameTime = OVERTIME_TIME;
+                }
             } else {
-                gameTime = OVERTIME_TIME;
+                if (currentPeriod <= MAX_PERIODS_3X3) {
+                    gameTime = PERIOD_TIME_3X3;
+                } else {
+                    gameTime = OVERTIME_TIME_3X3;
+                }
             }
             
             updateGameTimeDisplay();
@@ -1303,14 +1423,27 @@
 
         // Avança para o próximo período
         function nextPeriod() {
-            currentPeriod++;
-            updatePeriodDisplay();
+            const maxPeriods = gameMode === 'fiba' ? MAX_PERIODS : MAX_PERIODS_3X3;
             
-            if (currentPeriod <= MAX_PERIODS) {
-                speak(`Início do ${currentPeriod}º período`);
-            } else {
-                const overtimeNumber = currentPeriod - MAX_PERIODS;
-                speak(`Início da ${overtimeNumber}ª prorrogação`);
+            if (currentPeriod < maxPeriods || gameTime <= 0) {
+                currentPeriod++;
+                updatePeriodDisplay();
+                
+                if (gameMode === 'fiba') {
+                    if (currentPeriod <= MAX_PERIODS) {
+                        speak(`Início do ${currentPeriod}º período`);
+                    } else {
+                        const overtimeNumber = currentPeriod - MAX_PERIODS;
+                        speak(`Início da ${overtimeNumber}ª prorrogação`);
+                    }
+                } else {
+                    if (currentPeriod <= MAX_PERIODS_3X3) {
+                        speak("Início do jogo 3x3");
+                    } else {
+                        const overtimeNumber = currentPeriod - MAX_PERIODS_3X3;
+                        speak(`Início da ${overtimeNumber}ª prorrogação`);
+                    }
+                }
             }
         }
 
@@ -1368,7 +1501,7 @@
                 if (shotClockTime <= 0) {
                     clearInterval(shotClockInterval);
                     isShotClockRunning = false;
-                    shotClockTime = 24;
+                    shotClockTime = gameMode === 'fiba' ? 24 : 12;
                     updateShotClockDisplay();
                     playHorn();
                 }
@@ -1412,11 +1545,10 @@
             
             // Reset timers
             currentPeriod = 1;
-            gameTime = PERIOD_TIME;
-            shotClockTime = 24;
-            updateGameTimeDisplay();
+            updatePeriodDisplay(); // Isso vai definir o gameTime correto baseado no modo
+            
+            shotClockTime = gameMode === 'fiba' ? 24 : 12;
             updateShotClockDisplay();
-            updatePeriodDisplay();
             
             isGameRunning = false;
             isShotClockRunning = false;
@@ -1435,7 +1567,7 @@
         function resetShotClock24() {
             if (!isShotClockEnabled) return;
             
-            shotClockTime = 24;
+            shotClockTime = gameMode === 'fiba' ? 24 : 24;
             updateShotClockDisplay();
             startShotClock(true);
         }
@@ -1489,8 +1621,12 @@
                 if (!isFullscreen) {
                     toggleFullscreen();
                 }
+                // Esconde cursor do mouse
+                document.body.style.cursor = 'none';
             } else {
                 simpleMode.classList.remove('active');
+                // Mostra cursor do mouse
+                document.body.style.cursor = '';
             }
         }
 
@@ -1503,6 +1639,52 @@
             } else {
                 configMenu.classList.remove('open');
                 document.getElementById('config-button').textContent = "CONFIG";
+            }
+        }
+
+        // Configura os gestos de swipe no modo simples
+        function setupSwipeGestures() {
+            const simpleScoreboard = document.querySelector('.simple-scoreboard');
+            
+            simpleScoreboard.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+                touchStartY = e.changedTouches[0].screenY;
+            }, {passive: true});
+            
+            simpleScoreboard.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                touchEndY = e.changedTouches[0].screenY;
+                handleSwipe();
+            }, {passive: true});
+        }
+
+        // Processa os gestos de swipe
+        function handleSwipe() {
+            const dx = touchEndX - touchStartX;
+            const dy = touchEndY - touchStartY;
+            
+            // Limiar para considerar um swipe (em pixels)
+            const threshold = 50;
+            
+            // Determina a direção principal do swipe
+            if (Math.abs(dx) > Math.abs(dy)) {
+                // Swipe horizontal
+                if (dx > threshold) {
+                    // Swipe para direita - Time Branco +1 ponto
+                    adjustScore('white', 1);
+                } else if (dx < -threshold) {
+                    // Swipe para esquerda - Time Azul +1 ponto
+                    adjustScore('blue', 1);
+                }
+            } else {
+                // Swipe vertical
+                if (dy > threshold) {
+                    // Swipe para baixo - Time Branco +1 falta
+                    adjustFouls('white', 1);
+                } else if (dy < -threshold) {
+                    // Swipe para cima - Time Azul +1 falta
+                    adjustFouls('blue', 1);
+                }
             }
         }
 
@@ -1538,15 +1720,9 @@
                         requestTimeout();
                         break;
                     case 'Enter':
-                        toggleGameTimer();
-                        break;
                     case '+':
                     case 'NumpadAdd':
                         toggleGameTimer();
-                        break;
-                    case '-':
-                    case 'NumpadSubtract':
-                        previousPeriod();
                         break;
                     case '7':
                     case 'Numpad7':
@@ -1560,9 +1736,6 @@
                     case 'Numpad9':
                         resetShotClock12();
                         break;
-                    case ' ':
-                        toggleGameTimer();
-                        break;
                 }
             });
         }
@@ -1575,6 +1748,7 @@
             updateShotClockDisplay();
             updatePeriodDisplay();
             setupKeyboardShortcuts();
+            setupSwipeGestures();
             
             // Configura os event listeners
             document.getElementById('white-score-box').addEventListener('click', () => adjustScore('white', -1, true));
@@ -1623,6 +1797,10 @@
             document.getElementById('start-pause-game').addEventListener('click', toggleGameTimer);
             document.getElementById('increase-period').addEventListener('click', nextPeriod);
             document.getElementById('decrease-period').addEventListener('click', previousPeriod);
+            
+            // Listeners para os botões de modo de jogo
+            document.getElementById('fiba-mode').addEventListener('click', () => setGameMode('fiba'));
+            document.getElementById('threex3-mode').addEventListener('click', () => setGameMode('3x3'));
             
             document.getElementById('voice-select').addEventListener('change', () => {
                 const selectedIndex = document.getElementById('voice-select').value;
