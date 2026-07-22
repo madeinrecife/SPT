@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Overlay - Placar Basquete</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: transparent;
+            font-family: 'Roboto', Arial, sans-serif;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            touch-action: none;
+            overflow: hidden;
+        }
+        #overlay {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: stretch;
+            padding: 10px;
+            background: transparent;
+        }
+        .simple-scoreboard {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            justify-content: space-between;
+            align-items: stretch;
+            gap: 10px;
+        }
+        .simple-team {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+        }
+        .simple-team-name {
+            font-size: 5vw;
+            font-weight: bold;
+            text-align: center;
+            padding: 10px 0;
+            word-break: break-word;
+        }
+        .simple-team-name-white {
+            background-color: rgba(255,255,255,0.9);
+            color: #000;
+        }
+        .simple-team-name-blue {
+            background-color: rgba(26, 115, 232, 0.9);
+            color: #fff;
+        }
+        .simple-team-score {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 35vw;
+            font-weight: bold;
+            background: rgba(255,255,255,0.9);
+            color: #000;
+        }
+        .simple-team-score.blue {
+            background: rgba(26, 115, 232, 0.9);
+            color: #fff;
+        }
+        .simple-team-fouls {
+            padding: 10px;
+            font-size: 5vw;
+            font-weight: bold;
+            text-align: center;
+            background: rgba(255,255,255,0.9);
+            color: #000;
+        }
+        .simple-team-fouls.blue {
+            background: rgba(26, 115, 232, 0.9);
+            color: #fff;
+        }
+        .simple-team-fouls.blink {
+            animation: blink 1s infinite;
+            background-color: #f44336 !important;
+            color: #fff !important;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .simple-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-width: 80px;
+            padding: 0 5px;
+            background: transparent;
+        }
+        .simple-period {
+            font-size: 3.5vw;
+            font-weight: bold;
+            text-align: center;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(0,0,0,0.8);
+        }
+        .simple-timer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Roboto Mono', monospace;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(0,0,0,0.8);
+        }
+        .simple-game-minutes {
+            font-size: 8vw;
+            font-weight: bold;
+            line-height: 1;
+        }
+        .simple-game-seconds {
+            font-size: 4vw;
+            font-weight: bold;
+            opacity: 0.9;
+            line-height: 1;
+        }
+        .simple-divider {
+            width: 60%;
+            height: 2px;
+            background: rgba(255,255,255,0.3);
+            margin: 5px 0;
+        }
+        .simple-shot-clock-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .simple-shot-clock-container.hidden {
+            display: none;
+        }
+        .simple-shot-clock {
+            font-size: 10vw;
+            font-weight: bold;
+            font-family: 'Roboto Mono', monospace;
+            color: #FFD700;
+            text-shadow: 0 0 15px rgba(255,215,0,0.6);
+        }
+        .simple-logo {
+            height: 12vh;
+            width: auto;
+            opacity: 0.8;
+            filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
+        }
+
+        @media (min-width: 800px) {
+            .simple-team-name { font-size: 40px; }
+            .simple-team-score { font-size: 200px; }
+            .simple-team-fouls { font-size: 36px; }
+            .simple-game-minutes { font-size: 60px; }
+            .simple-game-seconds { font-size: 30px; }
+            .simple-shot-clock { font-size: 72px; }
+            .simple-period { font-size: 28px; }
+        }
+        @media (max-width: 400px) {
+            .simple-team-score { font-size: 30vw; }
+            .simple-shot-clock { font-size: 8vw; }
+        }
+    </style>
+</head>
+<body>
+    <div id="overlay">
+        <div class="simple-scoreboard" id="simple-scoreboard">
+            <!-- Time Branco -->
+            <div class="simple-team">
+                <div class="simple-team-name simple-team-name-white" id="simple-white-team-name">Branco</div>
+                <div class="simple-team-score" id="simple-white-score">0</div>
+                <div class="simple-team-fouls" id="simple-white-foul">0</div>
+            </div>
+
+            <!-- Centro -->
+            <div class="simple-center">
+                <img src="basquete.gif" alt="Basquete" class="simple-logo">
+                <div class="simple-period" id="simple-period-display">1º Período</div>
+                <div class="simple-timer">
+                    <span class="simple-game-minutes" id="simple-game-minutes">12</span>
+                    <span class="simple-game-seconds" id="simple-game-seconds">00</span>
+                </div>
+                <div class="simple-divider"></div>
+                <div class="simple-shot-clock-container" id="simple-shot-clock-container">
+                    <span class="simple-shot-clock" id="simple-shot-clock-display">24</span>
+                </div>
+            </div>
+
+            <!-- Time Azul -->
+            <div class="simple-team">
+                <div class="simple-team-name simple-team-name-blue" id="simple-blue-team-name">Azul</div>
+                <div class="simple-team-score blue" id="simple-blue-score">0</div>
+                <div class="simple-team-fouls blue" id="simple-blue-foul">0</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            'use strict';
+
+            // Elementos do overlay
+            const el = {
+                whiteName: document.getElementById('simple-white-team-name'),
+                blueName: document.getElementById('simple-blue-team-name'),
+                whiteScore: document.getElementById('simple-white-score'),
+                blueScore: document.getElementById('simple-blue-score'),
+                whiteFoul: document.getElementById('simple-white-foul'),
+                blueFoul: document.getElementById('simple-blue-foul'),
+                period: document.getElementById('simple-period-display'),
+                minutes: document.getElementById('simple-game-minutes'),
+                seconds: document.getElementById('simple-game-seconds'),
+                shotClock: document.getElementById('simple-shot-clock-display'),
+                shotClockContainer: document.getElementById('simple-shot-clock-container'),
+            };
+
+            // Função para atualizar a UI com os dados recebidos
+            function updateUI(data) {
+                if (!data) return;
+                if (data.whiteName !== undefined) el.whiteName.textContent = data.whiteName;
+                if (data.blueName !== undefined) el.blueName.textContent = data.blueName;
+                if (data.whiteScore !== undefined) el.whiteScore.textContent = data.whiteScore;
+                if (data.blueScore !== undefined) el.blueScore.textContent = data.blueScore;
+                if (data.whiteFouls !== undefined) {
+                    el.whiteFoul.textContent = data.whiteFouls;
+                    const limit = data.gameMode === 'fiba' ? 5 : 7;
+                    el.whiteFoul.classList.toggle('blink', data.whiteFouls >= limit);
+                }
+                if (data.blueFouls !== undefined) {
+                    el.blueFoul.textContent = data.blueFouls;
+                    const limit = data.gameMode === 'fiba' ? 5 : 7;
+                    el.blueFoul.classList.toggle('blink', data.blueFouls >= limit);
+                }
+                if (data.periodText !== undefined) el.period.textContent = data.periodText;
+                if (data.gameMinutes !== undefined) el.minutes.textContent = data.gameMinutes;
+                if (data.gameSeconds !== undefined) el.seconds.textContent = data.gameSeconds;
+                if (data.shotClock !== undefined) el.shotClock.textContent = data.shotClock;
+                if (data.isShotClockEnabled !== undefined) {
+                    el.shotClockContainer.classList.toggle('hidden', !data.isShotClockEnabled);
+                }
+            }
+
+            // Conectar ao BroadcastChannel
+            const channel = new BroadcastChannel('placar_basquete');
+            channel.onmessage = (event) => {
+                if (event.data && event.data.type === 'state_update') {
+                    updateUI(event.data.payload);
+                }
+            };
+
+            // Solicitar estado atual ao abrir
+            channel.postMessage({ type: 'request_state' });
+
+            // Fallback: localStorage (caso o broadcast não funcione)
+            function loadFromStorage() {
+                try {
+                    const stored = localStorage.getItem('overlay_state');
+                    if (stored) {
+                        const data = JSON.parse(stored);
+                        updateUI(data);
+                    }
+                } catch (e) {}
+            }
+
+            // Se não receber nada em 1 segundo, tenta localStorage
+            let received = false;
+            const timeout = setTimeout(() => {
+                if (!received) loadFromStorage();
+            }, 1000);
+
+            // Marcar que recebemos algo
+            const origUpdate = updateUI;
+            updateUI = function(data) {
+                received = true;
+                clearTimeout(timeout);
+                origUpdate(data);
+            };
+
+            console.log('Overlay iniciado. Aguardando dados...');
+        })();
+    </script>
+</body>
+</html>
