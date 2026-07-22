@@ -17,6 +17,7 @@
             --cor-alerta: #f44336;
             --cor-botao: #333333;
             --cor-botao-hover: #454545;
+            --amarelo-posse: #FFD700;
         }
 
         * {
@@ -571,7 +572,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 15vw;
+            font-size: 40vw;
             font-weight: bold;
             position: relative;
             touch-action: pan-y;
@@ -612,27 +613,48 @@
             align-items: center;
             justify-content: center;
             gap: 15px;
-            margin: 0 10px;
+            margin: 0 5px;
             height: 100%;
             touch-action: pan-y;
         }
 
         .simple-logo {
-            height: 15vh;
+            height: 20vh;
             width: auto;
             cursor: pointer;
         }
 
         .simple-timer {
-            font-size: 6vw;
-            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             font-family: 'Roboto Mono', monospace;
-            text-align: center;
+        }
+
+        .simple-game-minutes {
+            font-size: 10vw;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .simple-game-seconds {
+            font-size: 5vw;
+            font-weight: bold;
+            opacity: 0.9;
+            line-height: 1;
+        }
+
+        .simple-divider {
+            width: 70%;
+            height: 2px;
+            background-color: rgba(255, 255, 255, 0.2);
+            margin: 5px 0;
         }
 
         .simple-shot-clock-container {
             display: block;
-            margin: 10px 0;
+            margin: 5px 0;
         }
 
         .simple-shot-clock-container.hidden {
@@ -644,6 +666,7 @@
             font-weight: bold;
             font-family: 'Roboto Mono', monospace;
             text-align: center;
+            color: var(--amarelo-posse);
         }
 
         .simple-period {
@@ -710,15 +733,19 @@
             }
             
             .simple-team-score {
-                font-size: 120px;
+                font-size: 320px;
             }
             
             .simple-team-fouls {
                 font-size: 48px;
             }
             
-            .simple-timer {
-                font-size: 48px;
+            .simple-game-minutes {
+                font-size: 80px;
+            }
+            
+            .simple-game-seconds {
+                font-size: 40px;
             }
             
             .simple-shot-clock {
@@ -917,7 +944,11 @@
             <div class="simple-center">
                 <img src="basquete.gif" alt="Basquete" class="simple-logo" id="simple-logo-close">
                 <div class="simple-period" id="simple-period-display">1º Período</div>
-                <div class="simple-timer" id="simple-game-time-display">12:00</div>
+                <div class="simple-timer" id="simple-game-time-display">
+                    <div class="simple-game-minutes" id="simple-game-minutes">12</div>
+                    <div class="simple-game-seconds" id="simple-game-seconds">00</div>
+                </div>
+                <div class="simple-divider"></div>
                 <div class="simple-shot-clock-container" id="simple-shot-clock-container">
                     <div class="simple-shot-clock" id="simple-shot-clock-display">24</div>
                 </div>
@@ -944,10 +975,10 @@
         const MAX_SCORE = 200;
         const MAX_PERIODS = 4;
         const MAX_PERIODS_3X3 = 1;
-        const PERIOD_TIME = 12 * 60; // 12 minutos em segundos
-        const PERIOD_TIME_3X3 = 10 * 60; // 10 minutos em segundos
-        const OVERTIME_TIME = 5 * 60; // 5 minutos em segundos
-        const OVERTIME_TIME_3X3 = 1 * 60; // 1 minuto em segundos
+        const DEFAULT_PERIOD_TIME_FIBA = 12 * 60;
+        const DEFAULT_PERIOD_TIME_3X3 = 10 * 60;
+        const OVERTIME_TIME = 5 * 60;
+        const OVERTIME_TIME_3X3 = 1 * 60;
         
         let whiteScore = 0;
         let blueScore = 0;
@@ -960,12 +991,13 @@
         let selectedVoice = null;
         let isShotClockEnabled = true;
         let deferredPrompt;
-        let gameMode = 'fiba'; // 'fiba' ou '3x3'
+        let gameMode = 'fiba';
         
-        // Timers
+        let configuredGameTime = DEFAULT_PERIOD_TIME_FIBA;
+        
         let gameInterval;
         let shotClockInterval;
-        let gameTime = PERIOD_TIME;
+        let gameTime = configuredGameTime;
         let shotClockTime = 24;
         let isGameRunning = false;
         let isShotClockRunning = false;
@@ -995,33 +1027,27 @@
         const simpleBlueScore = document.getElementById('simple-blue-score').firstElementChild;
         const simpleWhiteFoul = document.getElementById('simple-white-foul').firstElementChild;
         const simpleBlueFoul = document.getElementById('simple-blue-foul').firstElementChild;
-        const simpleGameTimeDisplay = document.getElementById('simple-game-time-display');
+        const simpleGameMinutes = document.getElementById('simple-game-minutes');
+        const simpleGameSeconds = document.getElementById('simple-game-seconds');
         const simpleShotClockDisplay = document.getElementById('simple-shot-clock-display');
         const simplePeriodDisplay = document.getElementById('simple-period-display');
         const simpleWhiteTeamName = document.getElementById('simple-white-team-name');
         const simpleBlueTeamName = document.getElementById('simple-blue-team-name');
         const simpleShotClockContainer = document.getElementById('simple-shot-clock-container');
 
-        // Variáveis para controle de swipe
         let touchStartX = 0;
         let touchStartY = 0;
         let touchEndX = 0;
         let touchEndY = 0;
 
-        // Service Worker Registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
-                    .then(registration => {
-                        console.log('ServiceWorker registration successful');
-                    })
-                    .catch(err => {
-                        console.log('ServiceWorker registration failed: ', err);
-                    });
+                    .then(registration => console.log('ServiceWorker registration successful'))
+                    .catch(err => console.log('ServiceWorker registration failed: ', err));
             });
         }
 
-        // PWA Installation Prompt
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
@@ -1041,28 +1067,22 @@
             });
         });
 
-        // Carrega as vozes disponíveis
         function loadVoices() {
-            // Aguarda as vozes estarem disponíveis
             let attempts = 0;
             const maxAttempts = 10;
-            
             const checkVoices = () => {
                 voices = window.speechSynthesis.getVoices();
                 if (voices.length > 0 || attempts >= maxAttempts) {
                     const voiceSelect = document.getElementById('voice-select');
                     voiceSelect.innerHTML = '';
-
                     voices.forEach((voice, index) => {
                         const option = document.createElement('option');
                         option.value = index;
                         option.textContent = `${voice.name} (${voice.lang})`;
                         voiceSelect.appendChild(option);
                     });
-
                     if (voices.length > 0) {
                         selectedVoice = voices[0];
-                        // Restaura a voz salva se existir
                         const savedVoice = localStorage.getItem('selectedVoice');
                         if (savedVoice !== null && voices[savedVoice]) {
                             voiceSelect.value = savedVoice;
@@ -1074,37 +1094,22 @@
                     setTimeout(checkVoices, 100);
                 }
             };
-            
             checkVoices();
         }
 
-        // Configura o seletor de voz
         window.speechSynthesis.onvoiceschanged = loadVoices;
 
-        // Função para falar texto
         function speak(text) {
-            if (!window.speechSynthesis || !selectedVoice) {
-                console.warn("Síntese de voz não disponível");
-                return;
-            }
-            
-            // Cancela qualquer fala em andamento
+            if (!window.speechSynthesis || !selectedVoice) return;
             window.speechSynthesis.cancel();
-            
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.voice = selectedVoice;
             utterance.rate = 1.0;
             utterance.pitch = 1.0;
-            
-            // Adiciona tratamento de erro
-            utterance.onerror = (event) => {
-                console.error('Erro na síntese de voz:', event);
-            };
-            
+            utterance.onerror = (event) => console.error('Erro na síntese de voz:', event);
             window.speechSynthesis.speak(utterance);
         }
 
-        // Função para tocar a buzina
         function playHorn() {
             try {
                 const hornSound = new Audio('buzina.mp3');
@@ -1114,12 +1119,10 @@
             }
         }
 
-        // Anuncia o placar atual
         function announceScore() {
             const minutes = Math.floor(gameTime / 60);
             const seconds = gameTime % 60;
             const timeString = `${minutes} minutos e ${seconds} segundos`;
-            
             let periodText;
             if (gameMode === 'fiba') {
                 if (currentPeriod <= MAX_PERIODS) {
@@ -1131,16 +1134,10 @@
             } else {
                 periodText = "3 x 3";
             }
-            
-            const announcement = 
-                `Placar atual. ${whiteTeamName} ${whiteScore} pontos. ` +
-                `${blueTeamName} ${blueScore} pontos. ` +
-                `Faltam ${timeString} para o fim do ${periodText}.`;
-            
+            const announcement = `Placar atual. ${whiteTeamName} ${whiteScore} pontos. ${blueTeamName} ${blueScore} pontos. Faltam ${timeString} para o fim do ${periodText}.`;
             speak(announcement);
         }
 
-        // Salva as configurações
         function saveSettings() {
             whiteTeamName = document.getElementById('white-team-name').value.trim() || "Branco";
             blueTeamName = document.getElementById('blue-team-name').value.trim() || "Azul";
@@ -1154,28 +1151,27 @@
             const selectedIndex = document.getElementById('voice-select').value;
             selectedVoice = voices[selectedIndex];
             
-            // Atualiza visibilidade do cronômetro de posse
             document.getElementById('shot-clock-container').style.display = isShotClockEnabled ? 'flex' : 'none';
             simpleShotClockContainer.classList.toggle('hidden', !isShotClockEnabled);
             
-            // Salva no localStorage
             localStorage.setItem('whiteTeamName', whiteTeamName);
             localStorage.setItem('blueTeamName', blueTeamName);
             localStorage.setItem('selectedVoice', selectedIndex);
             localStorage.setItem('isShotClockEnabled', isShotClockEnabled);
             localStorage.setItem('gameMode', gameMode);
+            localStorage.setItem('configuredGameTime', configuredGameTime);
             
             speak("Configurações salvas");
             toggleConfigMenu();
         }
 
-        // Carrega configurações salvas
         function loadSettings() {
             const savedWhiteTeam = localStorage.getItem('whiteTeamName');
             const savedBlueTeam = localStorage.getItem('blueTeamName');
             const savedVoice = localStorage.getItem('selectedVoice');
             const savedShotClockEnabled = localStorage.getItem('isShotClockEnabled');
             const savedGameMode = localStorage.getItem('gameMode');
+            const savedConfiguredGameTime = localStorage.getItem('configuredGameTime');
             
             if (savedWhiteTeam) {
                 whiteTeamName = savedWhiteTeam;
@@ -1183,66 +1179,66 @@
                 whiteTeamNameElement.textContent = savedWhiteTeam;
                 simpleWhiteTeamName.textContent = savedWhiteTeam;
             }
-            
             if (savedBlueTeam) {
                 blueTeamName = savedBlueTeam;
                 document.getElementById('blue-team-name').value = savedBlueTeam;
                 blueTeamNameElement.textContent = savedBlueTeam;
                 simpleBlueTeamName.textContent = savedBlueTeam;
             }
-            
             if (savedVoice !== null) {
-                // A voz será definida quando as vozes forem carregadas
                 localStorage.setItem('selectedVoice', savedVoice);
             }
-            
             if (savedShotClockEnabled !== null) {
                 isShotClockEnabled = savedShotClockEnabled === 'true';
                 document.getElementById('shot-clock-toggle').checked = isShotClockEnabled;
                 document.getElementById('shot-clock-container').style.display = isShotClockEnabled ? 'flex' : 'none';
                 simpleShotClockContainer.classList.toggle('hidden', !isShotClockEnabled);
             }
-            
             if (savedGameMode) {
                 gameMode = savedGameMode;
-                setGameMode(savedGameMode);
+                setGameModeUI(savedGameMode);
             }
+            if (savedConfiguredGameTime) {
+                configuredGameTime = parseInt(savedConfiguredGameTime);
+            } else {
+                configuredGameTime = gameMode === 'fiba' ? DEFAULT_PERIOD_TIME_FIBA : DEFAULT_PERIOD_TIME_3X3;
+            }
+            gameTime = configuredGameTime;
+            updateGameTimeDisplay();
         }
 
-        // Define o modo de jogo (FIBA ou 3x3)
-        function setGameMode(mode) {
-            gameMode = mode;
-            
-            // Atualiza a UI dos botões de modo
+        function setGameModeUI(mode) {
             if (mode === 'fiba') {
                 fibaModeBtn.classList.add('active');
                 threex3ModeBtn.classList.remove('active');
-                shotClockTime = 24;
             } else {
                 fibaModeBtn.classList.remove('active');
                 threex3ModeBtn.classList.add('active');
+            }
+        }
+
+        function setGameMode(mode) {
+            gameMode = mode;
+            setGameModeUI(mode);
+            if (mode === 'fiba') {
+                configuredGameTime = DEFAULT_PERIOD_TIME_FIBA;
+                shotClockTime = 24;
+            } else {
+                configuredGameTime = DEFAULT_PERIOD_TIME_3X3;
                 shotClockTime = 12;
             }
-            
-            // Reseta o jogo para aplicar as novas configurações
-            resetAll();
-            
-            // Salva o modo selecionado
             localStorage.setItem('gameMode', mode);
+            localStorage.setItem('configuredGameTime', configuredGameTime);
+            resetAll();
         }
 
-        // Efeito visual ao atualizar placar
         function scoreUpdateEffect(element) {
             element.classList.add('score-updated');
-            setTimeout(() => {
-                element.classList.remove('score-updated');
-            }, 300);
+            setTimeout(() => element.classList.remove('score-updated'), 300);
         }
 
-        // Ajusta o placar dos times
         function adjustScore(team, points, silent = false) {
             let currentScore, newScore, teamName, scoreElement, simpleScoreElement;
-            
             if (team === 'white') {
                 currentScore = whiteScore;
                 newScore = Math.max(0, Math.min(MAX_SCORE, currentScore + points));
@@ -1258,28 +1254,18 @@
                 simpleScoreElement = simpleBlueScore;
                 teamName = blueTeamName;
             }
-            
-            // Atualiza os elementos visuais
             scoreElement.textContent = newScore;
             simpleScoreElement.textContent = newScore;
-            
             scoreUpdateEffect(scoreElement);
             if (isSimpleMode) scoreUpdateEffect(simpleScoreElement);
-            
             if (!silent) {
-                // Correção da concordância para singular/plural
-                if (newScore === 1) {
-                    speak(`${teamName} 1 ponto`);
-                } else {
-                    speak(`${teamName} ${newScore} pontos`);
-                }
+                if (newScore === 1) speak(`${teamName} 1 ponto`);
+                else speak(`${teamName} ${newScore} pontos`);
             }
         }
 
-        // Ajusta as faltas coletivas
         function adjustFouls(team, fouls, silent = false) {
             let totalFouls, foulElement, simpleFoulElement, teamName;
-            
             if (team === 'white') {
                 whiteFouls = Math.max(0, whiteFouls + fouls);
                 totalFouls = whiteFouls;
@@ -1293,12 +1279,9 @@
                 simpleFoulElement = simpleBlueFoul;
                 teamName = blueTeamName;
             }
-
-            // Atualiza os elementos visuais
             foulElement.textContent = totalFouls;
             simpleFoulElement.textContent = totalFouls;
 
-            // Remove classe blinking se tiver menos que o limite de faltas
             if (gameMode === 'fiba') {
                 if (totalFouls < 5) {
                     foulElement.parentElement.classList.remove('blinking');
@@ -1310,72 +1293,55 @@
                     if (isSimpleMode) simpleFoulElement.parentElement.classList.remove('blinking');
                 }
             }
-
-            // Adiciona classe blinking se tiver faltas estouradas
             if ((gameMode === 'fiba' && totalFouls >= 5) || (gameMode === '3x3' && totalFouls >= 7)) {
                 foulElement.parentElement.classList.add('blinking');
                 if (isSimpleMode) simpleFoulElement.parentElement.classList.add('blinking');
             }
-
             if (!silent) {
                 if (gameMode === 'fiba') {
-                    if (totalFouls === 5) {
-                        speak(`${teamName} com faltas estouradas!`);
-                    } else {
-                        // Correção da concordância para singular/plural
-                        if (totalFouls === 1) {
-                            speak(`${teamName} 1 falta`);
-                        } else {
-                            speak(`${teamName} ${totalFouls} faltas`);
-                        }
-                    }
+                    if (totalFouls === 5) speak(`${teamName} com faltas estouradas!`);
+                    else if (totalFouls === 1) speak(`${teamName} 1 falta`);
+                    else speak(`${teamName} ${totalFouls} faltas`);
                 } else {
-                    // Modo 3x3 - Anúncio especial de faltas
-                    if (totalFouls <= 6) {
-                        speak(`${teamName} ${totalFouls} falta${totalFouls > 1 ? 's' : ''} 1 lance`);
-                    } else if (totalFouls <= 9) {
-                        speak(`${teamName} ${totalFouls} faltas 2 lances`);
-                    } else {
-                        speak(`${teamName} ${totalFouls} faltas 2 lances e posse`);
-                    }
+                    if (totalFouls <= 6) speak(`${teamName} ${totalFouls} falta${totalFouls > 1 ? 's' : ''} 1 lance`);
+                    else if (totalFouls <= 9) speak(`${teamName} ${totalFouls} faltas 2 lances`);
+                    else speak(`${teamName} ${totalFouls} faltas 2 lances e posse`);
                 }
             }
         }
 
-        // Função para formatar o tempo em minutos e segundos
         function formatTime(seconds) {
             const minutes = Math.floor(seconds / 60);
             const secs = seconds % 60;
             return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
         }
 
-        // Atualiza a exibição do cronômetro do jogo
         function updateGameTimeDisplay() {
-            const timeString = formatTime(gameTime);
-            gameTimeDisplay.textContent = timeString;
-            simpleGameTimeDisplay.textContent = timeString;
+            const minutes = Math.floor(gameTime / 60);
+            const secs = gameTime % 60;
+            gameTimeDisplay.textContent = formatTime(gameTime);
+            simpleGameMinutes.textContent = minutes;
+            simpleGameSeconds.textContent = secs < 10 ? '0' + secs : secs;
         }
 
-        // Atualiza a exibição do cronômetro do tempo de posse
         function updateShotClockDisplay() {
             shotClockDisplay.textContent = shotClockTime;
             simpleShotClockDisplay.textContent = shotClockTime;
         }
 
-        // Define o tempo de jogo em minutos
         function setGameTime(minutes) {
-            gameTime = minutes * 60;
+            configuredGameTime = minutes * 60;
+            gameTime = configuredGameTime;
             updateGameTimeDisplay();
+            localStorage.setItem('configuredGameTime', configuredGameTime);
             speak(`Tempo de jogo definido para ${minutes} minutos`);
         }
 
-        // Anuncia o tempo de posse
         function announceShotClock() {
             if (shotClockTime === 0) {
                 lastAnnouncedShotTime = 0;
                 return;
             }
-            
             if (shotClockTime === 10 || shotClockTime === 5 || shotClockTime <= 3) {
                 if (shotClockTime !== lastAnnouncedShotTime) {
                     speak(shotClockTime.toString());
@@ -1386,86 +1352,66 @@
             }
         }
 
-        // Atualiza o display do período
         function updatePeriodDisplay() {
             let periodText;
             if (gameMode === 'fiba') {
-                if (currentPeriod <= MAX_PERIODS) {
-                    periodText = `${currentPeriod}º Período`;
-                } else {
-                    const overtimeNumber = currentPeriod - MAX_PERIODS;
-                    periodText = `Prorrogação ${overtimeNumber}`;
-                }
+                if (currentPeriod <= MAX_PERIODS) periodText = `${currentPeriod}º Período`;
+                else periodText = `Prorrogação ${currentPeriod - MAX_PERIODS}`;
             } else {
                 periodText = "3x3";
             }
-            
             periodDisplay.textContent = periodText;
             simplePeriodDisplay.textContent = periodText;
-            
-            // Define o tempo de jogo baseado no período e modo
+
             if (gameMode === 'fiba') {
-                if (currentPeriod <= MAX_PERIODS) {
-                    gameTime = PERIOD_TIME;
-                } else {
-                    gameTime = OVERTIME_TIME;
-                }
+                gameTime = (currentPeriod <= MAX_PERIODS) ? configuredGameTime : OVERTIME_TIME;
             } else {
-                if (currentPeriod <= MAX_PERIODS_3X3) {
-                    gameTime = PERIOD_TIME_3X3;
-                } else {
-                    gameTime = OVERTIME_TIME_3X3;
-                }
+                gameTime = (currentPeriod <= MAX_PERIODS_3X3) ? configuredGameTime : OVERTIME_TIME_3X3;
             }
-            
             updateGameTimeDisplay();
         }
 
-        // Avança para o próximo período
+        function pauseGame() {
+            if (isGameRunning) {
+                clearInterval(gameInterval);
+                clearInterval(shotClockInterval);
+                isGameRunning = false;
+                isShotClockRunning = false;
+                document.getElementById('start-pause-game').textContent = "Iniciar Jogo";
+            }
+        }
+
         function nextPeriod() {
             const maxPeriods = gameMode === 'fiba' ? MAX_PERIODS : MAX_PERIODS_3X3;
-            
+            pauseGame();
             if (currentPeriod < maxPeriods || gameTime <= 0) {
                 currentPeriod++;
                 updatePeriodDisplay();
-                
                 if (gameMode === 'fiba') {
-                    if (currentPeriod <= MAX_PERIODS) {
-                        speak(`Início do ${currentPeriod}º período`);
-                    } else {
-                        const overtimeNumber = currentPeriod - MAX_PERIODS;
-                        speak(`Início da ${overtimeNumber}ª prorrogação`);
-                    }
+                    if (currentPeriod <= MAX_PERIODS) speak(`Início do ${currentPeriod}º período`);
+                    else speak(`Início da ${currentPeriod - MAX_PERIODS}ª prorrogação`);
                 } else {
-                    if (currentPeriod <= MAX_PERIODS_3X3) {
-                        speak("Início do jogo 3x3");
-                    } else {
-                        const overtimeNumber = currentPeriod - MAX_PERIODS_3X3;
-                        speak(`Início da ${overtimeNumber}ª prorrogação`);
-                    }
+                    if (currentPeriod <= MAX_PERIODS_3X3) speak("Início do jogo 3x3");
+                    else speak(`Início da ${currentPeriod - MAX_PERIODS_3X3}ª prorrogação`);
                 }
             }
         }
 
-        // Volta para o período anterior
         function previousPeriod() {
             if (currentPeriod > 1) {
+                pauseGame();
                 currentPeriod--;
                 updatePeriodDisplay();
             }
         }
 
-        // Inicia o cronômetro do jogo
         function startGameTimer() {
             if (isGameRunning) return;
-            
             isGameRunning = true;
             document.getElementById('start-pause-game').textContent = "Pausar Jogo";
-            
             gameInterval = setInterval(() => {
                 gameTime--;
                 updateGameTimeDisplay();
-
                 if (gameTime <= 0) {
                     clearInterval(gameInterval);
                     clearInterval(shotClockInterval);
@@ -1473,31 +1419,21 @@
                     isShotClockRunning = false;
                     document.getElementById('start-pause-game').textContent = "Iniciar Jogo";
                     playHorn();
-                    setTimeout(() => {
-                        nextPeriod();
-                        startGameTimer();
-                        startShotClock();
-                    }, 2000);
+                    setTimeout(() => nextPeriod(), 2000);
                 }
             }, 1000);
         }
 
-        // Inicia ou continua o tempo de posse
         function startShotClock(reset = false) {
             if (!isShotClockEnabled) return;
             if (isShotClockRunning && !reset) return;
-            
             isShotClockRunning = true;
             lastAnnouncedShotTime = 0;
-            
-            // Limpa qualquer intervalo existente
             clearInterval(shotClockInterval);
-            
             shotClockInterval = setInterval(() => {
                 shotClockTime--;
                 updateShotClockDisplay();
                 announceShotClock();
-
                 if (shotClockTime <= 0) {
                     clearInterval(shotClockInterval);
                     isShotClockRunning = false;
@@ -1508,7 +1444,6 @@
             }, 1000);
         }
 
-        // Alterna a execução do cronômetro do jogo
         function toggleGameTimer() {
             if (isGameRunning) {
                 clearInterval(gameInterval);
@@ -1516,92 +1451,59 @@
                 isGameRunning = false;
                 isShotClockRunning = false;
                 document.getElementById('start-pause-game').textContent = "Iniciar Jogo";
-                announceScore(); // Anuncia o placar quando o jogo é pausado
+                announceScore();
             } else {
                 startGameTimer();
                 startShotClock();
             }
         }
 
-        // Reseta o cronômetro do jogo e do tempo de posse
         function resetAll() {
             clearInterval(gameInterval);
             clearInterval(shotClockInterval);
-            
-            // Reset placar e faltas
-            whiteScore = 0;
-            blueScore = 0;
-            whiteFouls = 0;
-            blueFouls = 0;
-            
-            whiteScoreElement.textContent = "0";
-            blueScoreElement.textContent = "0";
-            whiteFoulsElement.firstElementChild.textContent = "0";
-            blueFoulsElement.firstElementChild.textContent = "0";
-            simpleWhiteScore.textContent = "0";
-            simpleBlueScore.textContent = "0";
-            simpleWhiteFoul.textContent = "0";
-            simpleBlueFoul.textContent = "0";
-            
-            // Reset timers
+            whiteScore = 0; blueScore = 0; whiteFouls = 0; blueFouls = 0;
+            whiteScoreElement.textContent = "0"; blueScoreElement.textContent = "0";
+            whiteFoulsElement.firstElementChild.textContent = "0"; blueFoulsElement.firstElementChild.textContent = "0";
+            simpleWhiteScore.textContent = "0"; simpleBlueScore.textContent = "0";
+            simpleWhiteFoul.textContent = "0"; simpleBlueFoul.textContent = "0";
             currentPeriod = 1;
-            updatePeriodDisplay(); // Isso vai definir o gameTime correto baseado no modo
-            
+            updatePeriodDisplay();
             shotClockTime = gameMode === 'fiba' ? 24 : 12;
             updateShotClockDisplay();
-            
-            isGameRunning = false;
-            isShotClockRunning = false;
+            isGameRunning = false; isShotClockRunning = false;
             document.getElementById('start-pause-game').textContent = "Iniciar Jogo";
-            
-            // Reset piscar
-            whiteFoulsElement.classList.remove('blinking');
-            blueFoulsElement.classList.remove('blinking');
-            simpleWhiteFoul.parentElement.classList.remove('blinking');
-            simpleBlueFoul.parentElement.classList.remove('blinking');
-            
+            whiteFoulsElement.classList.remove('blinking'); blueFoulsElement.classList.remove('blinking');
+            simpleWhiteFoul.parentElement.classList.remove('blinking'); simpleBlueFoul.parentElement.classList.remove('blinking');
             speak("Placar resetado");
         }
 
-        // Reseta o tempo de posse para valores específicos
         function resetShotClock24() {
             if (!isShotClockEnabled) return;
-            
-            shotClockTime = gameMode === 'fiba' ? 24 : 24;
+            shotClockTime = 24;
             updateShotClockDisplay();
             startShotClock(true);
         }
-
         function resetShotClock14() {
             if (!isShotClockEnabled) return;
-            
             shotClockTime = 14;
             updateShotClockDisplay();
             startShotClock(true);
         }
-
         function resetShotClock12() {
             if (!isShotClockEnabled) return;
-            
             shotClockTime = 12;
             updateShotClockDisplay();
             startShotClock(true);
         }
 
-        // Pedido de tempo
         function requestTimeout() {
             playHorn();
-            setTimeout(() => {
-                speak("Pedido de tempo");
-            }, 999);
+            setTimeout(() => speak("Pedido de tempo"), 999);
         }
 
-        // Alternar tela cheia
         function toggleFullscreen() {
             if (!isFullscreen) {
-                document.documentElement.requestFullscreen().catch(err => {
-                    console.log(`Erro ao tentar entrar em tela cheia: ${err.message}`);
-                });
+                document.documentElement.requestFullscreen().catch(err => console.log(`Erro ao tentar entrar em tela cheia: ${err.message}`));
                 document.getElementById('fullscreen-button').textContent = "SAIR TELA CHEIA";
                 isFullscreen = true;
             } else {
@@ -1611,26 +1513,18 @@
             }
         }
 
-        // Alternar modo simplificado
         function toggleSimpleMode() {
             isSimpleMode = !isSimpleMode;
-            
             if (isSimpleMode) {
                 simpleMode.classList.add('active');
-                // Entrar em tela cheia automaticamente
-                if (!isFullscreen) {
-                    toggleFullscreen();
-                }
-                // Esconde cursor do mouse
+                if (!isFullscreen) toggleFullscreen();
                 document.body.style.cursor = 'none';
             } else {
                 simpleMode.classList.remove('active');
-                // Mostra cursor do mouse
                 document.body.style.cursor = '';
             }
         }
 
-        // Alternar menu de configurações
         function toggleConfigMenu() {
             isConfigMenuOpen = !isConfigMenuOpen;
             if (isConfigMenuOpen) {
@@ -1642,15 +1536,12 @@
             }
         }
 
-        // Configura os gestos de swipe no modo simples
         function setupSwipeGestures() {
             const simpleScoreboard = document.querySelector('.simple-scoreboard');
-            
             simpleScoreboard.addEventListener('touchstart', (e) => {
                 touchStartX = e.changedTouches[0].screenX;
                 touchStartY = e.changedTouches[0].screenY;
             }, {passive: true});
-            
             simpleScoreboard.addEventListener('touchend', (e) => {
                 touchEndX = e.changedTouches[0].screenX;
                 touchEndY = e.changedTouches[0].screenY;
@@ -1658,89 +1549,36 @@
             }, {passive: true});
         }
 
-        // Processa os gestos de swipe
         function handleSwipe() {
             const dx = touchEndX - touchStartX;
             const dy = touchEndY - touchStartY;
-            
-            // Limiar para considerar um swipe (em pixels)
             const threshold = 50;
-            
-            // Determina a direção principal do swipe
             if (Math.abs(dx) > Math.abs(dy)) {
-                // Swipe horizontal
-                if (dx > threshold) {
-                    // Swipe para direita - Time Branco +1 ponto
-                    adjustScore('white', 1);
-                } else if (dx < -threshold) {
-                    // Swipe para esquerda - Time Azul +1 ponto
-                    adjustScore('blue', 1);
-                }
+                if (dx > threshold) adjustScore('white', 1);
+                else if (dx < -threshold) adjustScore('blue', 1);
             } else {
-                // Swipe vertical
-                if (dy > threshold) {
-                    // Swipe para baixo - Time Branco +1 falta
-                    adjustFouls('white', 1);
-                } else if (dy < -threshold) {
-                    // Swipe para cima - Time Azul +1 falta
-                    adjustFouls('blue', 1);
-                }
+                if (dy > threshold) adjustFouls('white', 1);
+                else if (dy < -threshold) adjustFouls('blue', 1);
             }
         }
 
-        // Configura os atalhos do teclado
         function setupKeyboardShortcuts() {
             document.addEventListener('keydown', (event) => {
                 if (event.target.tagName === 'INPUT') return;
-                
-                const isNumpad = event.code.includes('Numpad');
-                const isNumberRow = !isNumpad && !isNaN(event.key);
-                
                 switch(event.key) {
-                    case '4':
-                    case 'Numpad4':
-                    case 'ArrowLeft': // Seta para esquerda
-                        adjustScore('white', 1);
-                        break;
-                    case '6':
-                    case 'Numpad6':
-                    case 'ArrowRight': // Seta para direita
-                        adjustScore('blue', 1);
-                        break;
-                    case '1':
-                    case 'Numpad1':
-                        adjustFouls('white', 1);
-                        break;
-                    case '3':
-                    case 'Numpad3':
-                        adjustFouls('blue', 1);
-                        break;
-                    case '0':
-                    case 'Numpad0':
-                        requestTimeout();
-                        break;
-                    case 'Enter':
-                    case '+':
-                    case 'NumpadAdd':
-                        toggleGameTimer();
-                        break;
-                    case '7':
-                    case 'Numpad7':
-                        resetShotClock24();
-                        break;
-                    case '8':
-                    case 'Numpad8':
-                        resetShotClock14();
-                        break;
-                    case '9':
-                    case 'Numpad9':
-                        resetShotClock12();
-                        break;
+                    case '4': case 'Numpad4': case 'ArrowLeft': adjustScore('white', 1); break;
+                    case '6': case 'Numpad6': case 'ArrowRight': adjustScore('blue', 1); break;
+                    case '1': case 'Numpad1': adjustFouls('white', 1); break;
+                    case '3': case 'Numpad3': adjustFouls('blue', 1); break;
+                    case '0': case 'Numpad0': requestTimeout(); break;
+                    case 'Enter': case '+': case 'NumpadAdd': toggleGameTimer(); break;
+                    case '7': case 'Numpad7': resetShotClock24(); break;
+                    case '8': case 'Numpad8': resetShotClock14(); break;
+                    case '9': case 'Numpad9': resetShotClock12(); break;
                 }
             });
         }
 
-        // Inicialização
         document.addEventListener('DOMContentLoaded', () => {
             loadVoices();
             loadSettings();
@@ -1750,38 +1588,21 @@
             setupKeyboardShortcuts();
             setupSwipeGestures();
             
-            // Configura os event listeners
             document.getElementById('white-score-box').addEventListener('click', () => adjustScore('white', -1, true));
             document.getElementById('blue-score-box').addEventListener('click', () => adjustScore('blue', -1, true));
             document.getElementById('white-foul-click').addEventListener('click', () => adjustFouls('white', -1, true));
             document.getElementById('blue-foul-click').addEventListener('click', () => adjustFouls('blue', -1, true));
             
-            // Listeners para o modo simplificado
             document.getElementById('simple-white-score-box').addEventListener('click', () => adjustScore('white', -1, true));
             document.getElementById('simple-blue-score-box').addEventListener('click', () => adjustScore('blue', -1, true));
             document.getElementById('simple-white-foul-click').addEventListener('click', () => adjustFouls('white', -1, true));
             document.getElementById('simple-blue-foul-click').addEventListener('click', () => adjustFouls('blue', -1, true));
             document.getElementById('simple-logo-close').addEventListener('click', toggleSimpleMode);
             
-            document.getElementById('game-time-increase').addEventListener('click', () => {
-                gameTime += 10;
-                updateGameTimeDisplay();
-            });
-            
-            document.getElementById('game-time-decrease').addEventListener('click', () => {
-                gameTime = Math.max(0, gameTime - 10);
-                updateGameTimeDisplay();
-            });
-            
-            document.getElementById('shot-clock-increase').addEventListener('click', () => {
-                shotClockTime = Math.min(99, shotClockTime + 1);
-                updateShotClockDisplay();
-            });
-            
-            document.getElementById('shot-clock-decrease').addEventListener('click', () => {
-                shotClockTime = Math.max(0, shotClockTime - 1);
-                updateShotClockDisplay();
-            });
+            document.getElementById('game-time-increase').addEventListener('click', () => { gameTime += 10; updateGameTimeDisplay(); });
+            document.getElementById('game-time-decrease').addEventListener('click', () => { gameTime = Math.max(0, gameTime - 10); updateGameTimeDisplay(); });
+            document.getElementById('shot-clock-increase').addEventListener('click', () => { shotClockTime = Math.min(99, shotClockTime + 1); updateShotClockDisplay(); });
+            document.getElementById('shot-clock-decrease').addEventListener('click', () => { shotClockTime = Math.max(0, shotClockTime - 1); updateShotClockDisplay(); });
             
             document.getElementById('reset-24').addEventListener('click', resetShotClock24);
             document.getElementById('reset-14').addEventListener('click', resetShotClock14);
@@ -1798,7 +1619,6 @@
             document.getElementById('increase-period').addEventListener('click', nextPeriod);
             document.getElementById('decrease-period').addEventListener('click', previousPeriod);
             
-            // Listeners para os botões de modo de jogo
             document.getElementById('fiba-mode').addEventListener('click', () => setGameMode('fiba'));
             document.getElementById('threex3-mode').addEventListener('click', () => setGameMode('3x3'));
             
@@ -1815,7 +1635,6 @@
                 document.getElementById('shot-clock-container').style.display = isShotClockEnabled ? 'flex' : 'none';
                 simpleShotClockContainer.classList.toggle('hidden', !isShotClockEnabled);
                 localStorage.setItem('isShotClockEnabled', isShotClockEnabled);
-                
                 if (!isShotClockEnabled) {
                     clearInterval(shotClockInterval);
                     isShotClockRunning = false;
