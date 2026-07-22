@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#121212">
     <meta name="description" content="Placar de Basquete Mobile PWA">
-    <title>SPARTA BASKETBALL PERNAMBUCO</title>
+    <title>Placar Basquete PWA</title>
     <link rel="manifest" href="manifest.json">
     <style>
         /* ---------- RESET & VARIÁVEIS ---------- */
@@ -881,6 +881,46 @@
                 selectedVoice: null,
             };
 
+            // ---------- BROADCAST CHANNEL (para overlay) ----------
+            const channel = new BroadcastChannel('placar_basquete');
+
+            function broadcastState() {
+                const periodText = (() => {
+                    if (state.gameMode === 'fiba') {
+                        if (state.currentPeriod <= MAX_PERIODS_FIBA) return `${state.currentPeriod}º Período`;
+                        return `Prorrogação ${state.currentPeriod - MAX_PERIODS_FIBA}`;
+                    } else {
+                        if (state.currentPeriod <= MAX_PERIODS_3X3) return '3x3';
+                        return `Prorrogação ${state.currentPeriod - MAX_PERIODS_3X3}`;
+                    }
+                })();
+
+                const payload = {
+                    whiteName: state.whiteName,
+                    blueName: state.blueName,
+                    whiteScore: state.whiteScore,
+                    blueScore: state.blueScore,
+                    whiteFouls: state.whiteFouls,
+                    blueFouls: state.blueFouls,
+                    periodText: periodText,
+                    gameMinutes: Math.floor(state.gameTime / 60),
+                    gameSeconds: (state.gameTime % 60).toString().padStart(2, '0'),
+                    shotClock: state.shotClockTime,
+                    isShotClockEnabled: state.isShotClockEnabled,
+                    gameMode: state.gameMode,
+                };
+                channel.postMessage({ type: 'state_update', payload });
+                // Fallback para localStorage (caso o BroadcastChannel não funcione)
+                localStorage.setItem('overlay_state', JSON.stringify(payload));
+            }
+
+            // Ouvir pedidos de estado do overlay
+            channel.onmessage = (event) => {
+                if (event.data && event.data.type === 'request_state') {
+                    broadcastState();
+                }
+            };
+
             // ---------- ELEMENTOS DOM ----------
             const $ = id => document.getElementById(id);
             const el = {
@@ -985,6 +1025,9 @@
 
                 // Botão iniciar/pausar
                 el.startPauseBtn.textContent = state.isGameRunning ? 'Pausar Jogo' : 'Iniciar Jogo';
+
+                // Transmite o estado para o overlay
+                broadcastState();
             }
 
             function updateGameTimeDisplay() {
@@ -1048,6 +1091,7 @@
                     const name = isWhite ? state.whiteName : state.blueName;
                     speak(`${name} ${newVal} ${newVal === 1 ? 'ponto' : 'pontos'}`);
                 }
+                broadcastState();
             }
 
             function adjustFouls(team, fouls, silent = false) {
@@ -1072,6 +1116,7 @@
                         speak(`${name} ${newVal} ${newVal === 1 ? 'falta' : 'faltas'}`);
                     }
                 }
+                broadcastState();
             }
 
             // ---------- CRONÔMETROS ----------
@@ -1082,6 +1127,7 @@
                 state.gameInterval = setInterval(() => {
                     state.gameTime--;
                     updateGameTimeDisplay();
+                    broadcastState(); // atualiza overlay em tempo real
                     if (state.gameTime <= 0) {
                         clearInterval(state.gameInterval);
                         clearInterval(state.shotClockInterval);
@@ -1107,6 +1153,7 @@
                 state.isGameRunning = false;
                 state.isShotClockRunning = false;
                 el.startPauseBtn.textContent = 'Iniciar Jogo';
+                broadcastState();
             }
 
             function toggleGameTimer() {
@@ -1128,6 +1175,7 @@
                 state.shotClockInterval = setInterval(() => {
                     state.shotClockTime--;
                     updateShotClockDisplay();
+                    broadcastState(); // atualiza overlay em tempo real
                     // Anúncios
                     if (state.shotClockTime === 10 || state.shotClockTime === 5 || (state.shotClockTime > 0 && state
                             .shotClockTime <= 3)) {
@@ -1145,6 +1193,7 @@
                         state.shotClockTime = (state.gameMode === 'fiba') ? 24 : 12;
                         updateShotClockDisplay();
                         playHorn();
+                        broadcastState();
                     }
                 }, 1000);
             }
@@ -1154,6 +1203,7 @@
                 state.shotClockTime = value;
                 updateShotClockDisplay();
                 startShotClock(true);
+                broadcastState();
             }
 
             // ---------- PERÍODO ----------
@@ -1380,10 +1430,12 @@
                 document.getElementById('game-time-inc').addEventListener('click', () => {
                     state.gameTime += 10;
                     updateGameTimeDisplay();
+                    broadcastState();
                 });
                 document.getElementById('game-time-dec').addEventListener('click', () => {
                     state.gameTime = Math.max(0, state.gameTime - 10);
                     updateGameTimeDisplay();
+                    broadcastState();
                 });
                 document.getElementById('start-pause-game').addEventListener('click', toggleGameTimer);
 
@@ -1391,10 +1443,12 @@
                 document.getElementById('shot-clock-inc').addEventListener('click', () => {
                     state.shotClockTime = Math.min(99, state.shotClockTime + 1);
                     updateShotClockDisplay();
+                    broadcastState();
                 });
                 document.getElementById('shot-clock-dec').addEventListener('click', () => {
                     state.shotClockTime = Math.max(0, state.shotClockTime - 1);
                     updateShotClockDisplay();
+                    broadcastState();
                 });
                 document.getElementById('reset-shot-24').addEventListener('click', () => resetShotClock(24));
                 document.getElementById('reset-shot-14').addEventListener('click', () => resetShotClock(14));
@@ -1424,6 +1478,7 @@
                         state.configuredGameTime = min * 60;
                         state.gameTime = state.configuredGameTime;
                         updateGameTimeDisplay();
+                        broadcastState();
                         localStorage.setItem('configuredGameTime', state.configuredGameTime);
                         speak(`Tempo definido para ${min} minutos`);
                     });
